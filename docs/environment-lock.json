@@ -12,5 +12,6 @@
   "pip_check": "pass",
   "lock_file": "requirements.lock.txt",
   "lock_sha256": "60c438efebbfe9bf42df6b84bf5b35c759c937188bb5d4f7b533e1eb772f6fb2",
-  "note": "Exact-version environment snapshot from the tested virtual environment. It is not a hash-locked wheel supply-chain manifest."
+  "note": "Exact-version environment snapshot from the tested virtual environment. It is not a hash-locked wheel supply-chain manifest.",
+  "lock_hash_mode": "utf8-canonical-lf"
 }

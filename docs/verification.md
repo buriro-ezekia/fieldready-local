@@ -112,17 +112,37 @@ human-controlled decision path without external connectivity once dependencies a
 local model are installed. It does not by itself establish browser rendering while offline;
 that remains a separate visual/manual observation.
 
+## Clean-install and packaging verification
+
+The maintainer ran `scripts/check_clean_install.py` successfully on Windows using the
+committed dependency snapshot.
+
+The fresh temporary environment reported:
+
+- Python **3.14.6**;
+- runtime lock SHA-256
+  `60c438efebbfe9bf42df6b84bf5b35c759c937188bb5d4f7b533e1eb772f6fb2`;
+- **30** exact runtime package pins;
+- build backend resolved to `setuptools 84.0.0`;
+- installed synthetic demo returned **8 rows** and **6 findings**;
+- packaged CSV and browser assets: `PACKAGE DATA: PASS`;
+- final result: `CLEAN INSTALL + PACKAGING: PASS`.
+
+Windows also reported that the temporary virtual-environment executable resolved from an
+8.3 short pathname to the corresponding long pathname. This was informational path
+normalisation and did not affect the successful installed-package checks.
+
 ## Remaining release-hardening gates
 
-The core pathway, dependency snapshot and automated offline proof are verified. Remaining:
+The core pathway, dependency snapshot, automated offline proof and clean-install packaging
+proof are verified. Remaining:
 
-1. Run packaging/install verification from a clean environment.
-2. Expand measured model evaluation beyond the single demonstrated in-scope question,
+1. Expand measured model evaluation beyond the single demonstrated in-scope question,
    including out-of-scope intent accuracy and repeated latency measurements.
-3. Optionally retain a screenshot confirming browser rendering while external networking
+2. Optionally retain a screenshot confirming browser rendering while external networking
    is disabled, without exposing the private session token.
-4. Expand rules/reporting beyond the synthetic four-column prototype as planned.
-5. Prepare final demo-video, product-feedback and friction-log evidence.
+3. Expand rules/reporting beyond the synthetic four-column prototype as planned.
+4. Prepare final demo-video, product-feedback and friction-log evidence.
 
 ## GitHub Actions boundary
 

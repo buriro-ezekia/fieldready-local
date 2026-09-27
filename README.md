@@ -4,7 +4,7 @@ A local survey-review assistant for the Amazon Developer Hackathon: a **simulate
 Alexa+ experience with a real local MCP backend**, not a live Alexa+ integration or
 an Amazon-certified application. Use synthetic data only.
 
-## Current status — core end-to-end workflow verified
+## Current status — core and automated offline workflow verified
 
 The maintainer has demonstrated the core workflow on Windows:
 
@@ -23,7 +23,8 @@ Verified Windows evidence includes:
 - real web -> MCP -> SQLite integration;
 - successful browser review and saved human decisions;
 - real local `qwen2.5:1.5b` inference;
-- a demonstrated grounded `component_total` explanation in **8.46 seconds**.
+- a demonstrated grounded `component_total` explanation in **8.46 seconds**;
+- an automated network-disabled full-stack pass with **94 tests**, all external probes unreachable and local-model inference measured at **9.52 seconds**.
 
 The local model does **not** write factual review prose. It classifies the supervisor's
 question as in-scope or out-of-scope; Python renders factual wording from verified evidence.
@@ -92,26 +93,32 @@ not download a model or silently substitute a hosted API.
 
 ## Release hardening
 
-The verified core pathway is not yet the final submission. The tested Windows dependency
-snapshot is now committed; the explicit network-disabled full-stack proof remains pending.
+The tested Windows dependency snapshot is committed and the automated network-disabled
+full-stack proof has passed. The offline gate confirmed that external probes were unreachable
+before exercising MCP, web, SQLite, local AI and a human-confirmed review using only local
+services and synthetic temporary state.
 
-The committed `requirements.lock.txt` contains the exact package versions from the maintainer-tested
-Windows virtual environment; `docs/environment-lock.json` records Python/platform metadata and the
-lock SHA-256. This is an exact-version environment snapshot rather than a hash-locked wheel manifest.
-
-After dependencies and `qwen2.5:1.5b` are already installed, disconnect external networking
-and run:
+Next gates:
 
 ```powershell
-& $py scripts/check_offline.py --model "qwen2.5:1.5b"
+$py = ".\\.venv\\Scripts\\python.exe"
+
+# Fresh temporary environment + installed-package verification
+& $py scripts/check_clean_install.py
+
+# 16 balanced questions x 2 repeats = 32 real local classifications
+& $py scripts/evaluate_intent.py --model "qwen2.5:1.5b" --repeats 2
 ```
 
-The offline check refuses to count an online run, then exercises MCP, web, SQLite and real
-local AI using synthetic data and temporary state. See
-[release-hardening procedure](docs/release-hardening.md).
+The first writes `runtime/clean-install-result.json`. The second writes
+`runtime/intent-eval.json` and requires >=90% overall accuracy and >=85% recall
+for each intent class.
 
-Remaining work after those gates includes clean install/package verification, broader
-intent/latency evaluation, expanded rules/reporting and the final demo/submission materials.
+See [release-hardening procedure](docs/release-hardening.md) and
+[model evaluation](docs/model-evaluation.md).
+
+Remaining work includes executing those two gates, expanded rules/reporting and the
+final demo/submission materials.
 
 ## Cost, privacy and licence
 

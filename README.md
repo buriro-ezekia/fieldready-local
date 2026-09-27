@@ -90,16 +90,35 @@ writes use the trusted local control surface; validation and evidence reads use 
 The launcher starts a dedicated loopback Ollama service with cloud access disabled. It does
 not download a model or silently substitute a hosted API.
 
-## Remaining release hardening
+## Release hardening
 
-The verified core pathway is not yet the final submission. Remaining work includes:
+The verified core pathway is not yet the final submission. The branch now includes two
+explicit release-hardening tools, but their results remain **pending until executed on the
+maintainer's tested Windows environment**.
 
-- generate a reproducible dependency lock from the tested environment;
-- run the complete workflow with external networking disabled after dependencies/model are installed;
-- verify clean install/package behaviour;
-- broaden intent/latency evaluation beyond one demonstrated question;
-- expand rules/reporting for a stronger product demonstration;
-- prepare the final demo video, product feedback and friction log.
+Capture the exact installed dependency versions while still online:
+
+```powershell
+$py = ".\\.venv\\Scripts\\python.exe"
+& $py scripts/write_lock.py
+```
+
+This generates `requirements.lock.txt` and `docs/environment-lock.json` from the existing
+virtual environment without resolving or downloading packages.
+
+After dependencies and `qwen2.5:1.5b` are already installed, disconnect external networking
+and run:
+
+```powershell
+& $py scripts/check_offline.py --model "qwen2.5:1.5b"
+```
+
+The offline check refuses to count an online run, then exercises MCP, web, SQLite and real
+local AI using synthetic data and temporary state. See
+[release-hardening procedure](docs/release-hardening.md).
+
+Remaining work after those gates includes clean install/package verification, broader
+intent/latency evaluation, expanded rules/reporting and the final demo/submission materials.
 
 ## Cost, privacy and licence
 

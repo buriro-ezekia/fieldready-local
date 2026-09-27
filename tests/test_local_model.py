@@ -3,7 +3,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-from fieldready.local_model import FORMAT, LocalExplainer, safe_model_name
+from fieldready.local_model import INTENT_FORMAT, LocalExplainer, grounded_text, safe_model_name
 from fieldready.mcp_client import MCPGateway
 
 
@@ -14,38 +14,93 @@ class ModelTests(unittest.TestCase):
         self.finding = dict(row_number=2, rule_id="component_total", field="household_size", severity="high",
                             observed="5", expected="4", status="open", finding_id="abc:1", record_id="DO_NOT_SEND")
         self.calls = []
-        self.payload = {
-            "rule_id": "component_total",
-            "record_ordinal": 2,
-            "observed": "5",
-            "expected": "4",
-            "explanation": "The recorded household_size is 5 while the expected component total is 4.",
-            "verification": "Check the adults and children values used to derive the expected total before deciding.",
-        }
         self.responses = [{"models": [{"name": "fixture:small", "digest": "fixture-digest"}]},
                           {"model_info": {"general.architecture": "fixture"}},
-                          {"done": True, "message": {"content": json.dumps(self.payload)}}]
+                          {"done": True, "message": {"content": json.dumps({"intent": "in_scope"})}}]
 
     def fake(self, method, path, body=None):
         self.calls.append((method, path, body))
         return self.responses.pop(0)
 
-    def execute(self):
+    def execute(self, question="Why flagged?"):
         with patch.object(self.client, "_request", side_effect=self.fake):
-            return self.client.explain(self.summary, self.finding, "Why flagged?")
+            return self.client.explain(self.summary, self.finding, question)
 
     def test_mock_contract_and_no_tool_access(self):
         result = self.execute()
         self.assertEqual(result["digest"], "fixture-digest")
+        self.assertEqual(result["intent"], "in_scope")
         self.assertEqual(result["rule_id"], "component_total")
         self.assertEqual(result["record_ordinal"], 2)
         request = self.calls[-1][2]
         self.assertFalse(request["stream"])
-        self.assertEqual(request["format"], FORMAT)
+        self.assertEqual(request["format"], INTENT_FORMAT)
         self.assertNotIn("tools", request)
         self.assertNotIn("DO_NOT_SEND", str(request))
-        self.assertIn("component_total", str(request))
+        self.assertNotIn("component_total", str(request["messages"]))
+        self.assertIn("Rule component_total", result["text"])
         self.assertIn("record ordinal 2", result["text"])
+        self.assertIn("recorded as 5", result["text"])
+        self.assertIn("validated component total is 4", result["text"])
+
+    def test_model_cannot_inject_prose_field(self):
+        self.responses[2]["message"]["content"] = json.dumps({
+            "intent": "in_scope",
+            "explanation": "sampling bias caused this",
+        })
+        with self.assertRaises(RuntimeError):
+            self.execute()
+
+    def test_out_of_scope_gets_deterministic_decline(self):
+        self.responses[2]["message"]["content"] = json.dumps({"intent": "out_of_scope"})
+        result = self.execute("Write a poem.")
+        self.assertEqual(result["intent"], "out_of_scope")
+        self.assertIn("outside this finding-review assistant's scope", result["text"])
+        self.assertNotIn("poem", result["text"].lower())
+
+    def test_grounded_component_total(self):
+        text = grounded_text(self.finding)
+        self.assertIn("component_total", text)
+        self.assertIn("record ordinal 2", text)
+        self.assertIn("household_size is recorded as 5", text)
+        self.assertIn("validated component total is 4", text)
+
+    def test_grounded_duplicate_id(self):
+        finding = dict(self.finding, row_number=3, rule_id="duplicate_id", field="record_id",
+                       observed="0003", expected="A unique identifier")
+        text = grounded_text(finding)
+        self.assertIn("0003", text)
+        self.assertIn("occurs more than once", text)
+
+    def test_grounded_missing_id(self):
+        finding = dict(self.finding, row_number=5, rule_id="missing_id", field="record_id",
+                       observed="", expected="A non-empty identifier")
+        text = grounded_text(finding)
+        self.assertIn("(missing)", text)
+        self.assertIn("non-empty identifier", text)
+
+    def test_grounded_missing_count(self):
+        finding = dict(self.finding, row_number=6, rule_id="missing_count", field="adults",
+                       observed="", expected="An integer from 0 to 100")
+        text = grounded_text(finding)
+        self.assertIn("adults is (missing)", text)
+        self.assertIn("integer from 0 to 100", text)
+
+    def test_grounded_invalid_count(self):
+        finding = dict(self.finding, row_number=7, rule_id="invalid_count", field="adults",
+                       observed="-1", expected="An integer from 0 to 100")
+        text = grounded_text(finding)
+        self.assertIn("adults is recorded as -1", text)
+        self.assertIn("integer from 0 to 100", text)
+
+    def test_unknown_rule_uses_generic_evidence_only_template(self):
+        finding = dict(self.finding, rule_id="future_rule", field="x", observed="A", expected="B")
+        text = grounded_text(finding)
+        self.assertEqual(
+            text,
+            "Rule future_rule · record ordinal 2. The finding concerns x: observed A; expected B. "
+            "Verification: check the displayed evidence against the source before recording a review outcome."
+        )
 
     def test_cloud_name_rejected(self):
         with self.assertRaises(ValueError):
@@ -86,39 +141,18 @@ class ModelTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.execute()
 
-    def test_schema_key_mismatch_rejected(self):
-        bad = dict(self.payload)
-        bad["extra"] = "not allowed"
-        self.responses[2]["message"]["content"] = json.dumps(bad)
-        with self.assertRaises(RuntimeError):
-            self.execute()
-
-    def test_changed_rule_id_rejected(self):
-        bad = dict(self.payload, rule_id="other_rule")
-        self.responses[2]["message"]["content"] = json.dumps(bad)
-        with self.assertRaises(RuntimeError):
-            self.execute()
-
-    def test_changed_record_ordinal_rejected(self):
-        bad = dict(self.payload, record_ordinal=3)
-        self.responses[2]["message"]["content"] = json.dumps(bad)
-        with self.assertRaises(RuntimeError):
-            self.execute()
-
-    def test_changed_observed_value_rejected(self):
-        bad = dict(self.payload, observed="4")
-        self.responses[2]["message"]["content"] = json.dumps(bad)
-        with self.assertRaises(RuntimeError):
-            self.execute()
-
-    def test_unsupported_speculation_rejected(self):
-        bad = dict(self.payload, explanation="This may be caused by sampling bias.")
-        self.responses[2]["message"]["content"] = json.dumps(bad)
+    def test_unsupported_intent_rejected(self):
+        self.responses[2]["message"]["content"] = json.dumps({"intent": "maybe"})
         with self.assertRaises(RuntimeError):
             self.execute()
 
     def test_oversized_evidence_rejected(self):
         self.finding["observed"] = "x" * 201
+        with self.assertRaises(ValueError):
+            self.execute()
+
+    def test_incomplete_evidence_rejected(self):
+        del self.finding["field"]
         with self.assertRaises(ValueError):
             self.execute()
 

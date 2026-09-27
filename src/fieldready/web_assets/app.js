@@ -91,7 +91,7 @@ $("ask-form").onsubmit = event => {event.preventDefault();perform(async()=>{
   const id=selected.finding_id; $("ask").disabled=true; $("answer").textContent="Running local inference… No review decision will be saved.";
   try {const result=await api("/api/explain",{run_id:run,finding_id:id,question:$("question").value});
     $("answer").textContent=result.text+"\n\n"+result.notice+"\nModel: "+result.model+" · "+result.elapsed_seconds+" s · Evidence: "+result.finding_id+" / "+result.rule_id;
-    message("Local model returned an explanation. Check it against the evidence before making a decision.");
+    message("Local AI classified the question; the explanation was assembled from verified evidence. Review it before making a decision.");
   } catch(error){$("answer").textContent="No explanation produced. "+error.message;throw error;}
   finally{$("ask").disabled=!hasModel || !selected;}
 });};

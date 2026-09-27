@@ -5,6 +5,7 @@ import math
 import shutil
 import statistics
 import sys
+import time
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -75,28 +76,43 @@ def main() -> int:
             explainer = LocalExplainer(args.model, 11435)
             for repeat in range(1, args.repeats + 1):
                 for case in cases:
+                    wall_started = time.monotonic()
                     try:
                         result = explainer.explain(summary, finding, case["question"])
                         predicted = result["intent"]
-                        elapsed = float(result["elapsed_seconds"])
+                        model_elapsed = float(result["elapsed_seconds"]) if result["model_invoked"] else None
+                        routing_source = result["routing_source"]
+                        model_invoked = bool(result["model_invoked"])
                         if predicted == "in_scope" and result["text"] != expected_grounded:
                             raise RuntimeError("In-scope response was not deterministic grounded output.")
                         if result["finding_id"] != finding["finding_id"]:
                             raise RuntimeError("Evidence reference changed during evaluation.")
                         error = None
                     except Exception as exc:
-                        predicted, elapsed, error = "error", None, type(exc).__name__ + ": " + str(exc)
+                        predicted, model_elapsed, routing_source, model_invoked = (
+                            "error", None, "error", False
+                        )
+                        error = type(exc).__name__ + ": " + str(exc)
+                    end_to_end = round(time.monotonic() - wall_started, 4)
+                    expected_route = "local_model" if case["expected"] == "in_scope" else "deterministic_scope_guard"
                     results.append({
                         "id": case["id"],
                         "repeat": repeat,
                         "expected": case["expected"],
                         "predicted": predicted,
                         "correct": predicted == case["expected"],
-                        "elapsed_seconds": elapsed,
+                        "routing_source": routing_source,
+                        "expected_routing_source": expected_route,
+                        "routing_correct": routing_source == expected_route,
+                        "model_invoked": model_invoked,
+                        "model_elapsed_seconds": model_elapsed,
+                        "end_to_end_elapsed_seconds": end_to_end,
                         "error": error,
                     })
-                    label = "PASS" if results[-1]["correct"] else "MISS"
-                    print(f"{case['id']} repeat {repeat}: {case['expected']} -> {predicted} [{label}]")
+                    label = "PASS" if results[-1]["correct"] and results[-1]["routing_correct"] else "MISS"
+                    route = results[-1]["routing_source"]
+                    print(f"{case['id']} repeat {repeat}: {case['expected']} -> {predicted} "
+                          f"via {route} [{label}]")
     except (OSError, RuntimeError, ValueError) as exc:
         print("INTENT EVAL: FAIL — " + str(exc), file=sys.stderr)
         return 2
@@ -109,7 +125,11 @@ def main() -> int:
         subset = [item for item in results if item["expected"] == label]
         recalls[label] = sum(item["correct"] for item in subset) / len(subset)
 
-    latencies = [item["elapsed_seconds"] for item in results if item["elapsed_seconds"] is not None]
+    model_latencies = [
+        item["model_elapsed_seconds"] for item in results
+        if item["model_elapsed_seconds"] is not None
+    ]
+    end_to_end_latencies = [item["end_to_end_elapsed_seconds"] for item in results]
     confusion = Counter((item["expected"], item["predicted"]) for item in results)
     case_accuracy = defaultdict(list)
     for item in results:
@@ -123,13 +143,27 @@ def main() -> int:
         "correct": correct,
         "accuracy": round(accuracy, 4),
         "class_recall": {key: round(value, 4) for key, value in recalls.items()},
-        "latency_seconds": {
-            "n": len(latencies),
-            "mean": round(statistics.mean(latencies), 3) if latencies else None,
-            "median": round(statistics.median(latencies), 3) if latencies else None,
-            "p95": round(percentile(latencies, 0.95), 3) if latencies else None,
-            "min": round(min(latencies), 3) if latencies else None,
-            "max": round(max(latencies), 3) if latencies else None,
+        "routing": {
+            "correct": sum(item["routing_correct"] for item in results),
+            "accuracy": round(sum(item["routing_correct"] for item in results) / total, 4),
+            "model_invocations": sum(item["model_invoked"] for item in results),
+            "guarded_requests": sum(item["routing_source"] == "deterministic_scope_guard" for item in results),
+        },
+        "model_latency_seconds": {
+            "n": len(model_latencies),
+            "mean": round(statistics.mean(model_latencies), 3) if model_latencies else None,
+            "median": round(statistics.median(model_latencies), 3) if model_latencies else None,
+            "p95": round(percentile(model_latencies, 0.95), 3) if model_latencies else None,
+            "min": round(min(model_latencies), 3) if model_latencies else None,
+            "max": round(max(model_latencies), 3) if model_latencies else None,
+        },
+        "end_to_end_latency_seconds": {
+            "n": len(end_to_end_latencies),
+            "mean": round(statistics.mean(end_to_end_latencies), 3),
+            "median": round(statistics.median(end_to_end_latencies), 3),
+            "p95": round(percentile(end_to_end_latencies, 0.95), 3),
+            "min": round(min(end_to_end_latencies), 4),
+            "max": round(max(end_to_end_latencies), 3),
         },
         "confusion": {
             f"{expected}->{predicted}": count
@@ -149,15 +183,17 @@ def main() -> int:
     args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({key: report[key] for key in (
         "model", "cases", "repeats", "evaluations", "correct", "accuracy",
-        "class_recall", "latency_seconds", "confusion"
+        "class_recall", "routing", "model_latency_seconds", "end_to_end_latency_seconds", "confusion"
     )}, indent=2))
     print("WROTE:", args.output)
 
     errors = sum(item["predicted"] == "error" for item in results)
+    routing_accuracy = sum(item["routing_correct"] for item in results) / total
     passed = (
         errors == 0
         and accuracy >= args.min_accuracy
         and all(value >= args.min_class_recall for value in recalls.values())
+        and routing_accuracy == 1.0
     )
     if not passed:
         print("INTENT EVAL: FAIL — thresholds were not met.", file=sys.stderr)

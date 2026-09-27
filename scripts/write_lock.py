@@ -22,6 +22,15 @@ def canonical(name: str) -> str:
     return re.sub(r"[-_.]+", "-", name).lower()
 
 
+def canonical_text(text: str) -> str:
+    """Normalise text line endings for cross-platform evidence hashing."""
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
+def text_sha256(text: str) -> str:
+    return hashlib.sha256(canonical_text(text).encode("utf-8")).hexdigest()
+
+
 def run(*args: str) -> str:
     completed = subprocess.run(
         [sys.executable, *args],
@@ -87,7 +96,7 @@ def main() -> int:
     ]
     body = "\n".join(body_lines)
     LOCK.write_text(body, encoding="utf-8", newline="\n")
-    digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    digest = text_sha256(body)
 
     metadata = {
         "generated_utc": datetime.now(timezone.utc).isoformat(),
@@ -99,6 +108,7 @@ def main() -> int:
         "pip_check": "pass",
         "lock_file": LOCK.name,
         "lock_sha256": digest,
+        "lock_hash_mode": "utf8-canonical-lf",
         "note": (
             "Exact-version environment snapshot from the tested virtual environment. "
             "It is not a hash-locked wheel supply-chain manifest."

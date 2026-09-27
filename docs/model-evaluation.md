@@ -1,12 +1,25 @@
 # Local model evaluation
 
-## First real-inference gate
+## Architecture after the first real-inference failure
 
-FieldReady Local uses the language model only to explain deterministic findings. Python remains
-the source of validation results and the model cannot save review decisions.
+FieldReady Local no longer allows the language model to write factual review prose.
 
-The first real model target is `qwen2.5:1.5b`, which was previously used locally by the
-maintainer. This is a test target, not a claim that it will be retained for the final release.
+The local model performs one bounded task: classify the supervisor's natural-language
+question as either `in_scope` or `out_of_scope`. Python then assembles every factual
+statement from the deterministic finding evidence already returned by the validation layer.
+
+This separation is deliberate:
+
+- Python owns rule identifiers, record ordinals, observed values and expected values.
+- The model never receives tools and cannot save a review decision.
+- The model cannot add free-form factual claims to the displayed explanation.
+- The browser labels the result as AI-assisted question interpretation plus grounded evidence.
+- A failed or unavailable model produces no substitute cloud response.
+
+The first real model target remains `qwen2.5:1.5b`, previously used locally by the
+maintainer. This is a test target, not a commitment to the final release.
+
+## Real local-inference gate
 
 Run from the repository root:
 
@@ -20,24 +33,34 @@ The check:
 - requires an already installed Ollama executable and exact model name;
 - launches a dedicated loopback Ollama service on port 11435;
 - sets `OLLAMA_NO_CLOUD=1`;
-- performs one explanation against synthetic evidence;
+- performs one real structured intent classification;
 - does not download a model;
 - does not provide tools to the model;
 - does not alter SQLite or a review decision;
+- validates the deterministic evidence references returned with the grounded result;
 - fails rather than falling back to a hosted model.
 
 A successful run ends with:
 
 ```text
-LOCAL MODEL EXPLANATION: PASS (quality beyond this fixture is not yet evaluated)
+LOCAL MODEL + GROUNDED EXPLANATION: PASS (broader intent quality is not yet evaluated)
 ```
 
-This only establishes that one real local explanation completed and retained the expected
-evidence reference. It is not a systematic quality evaluation.
+For the fixture question, the model should classify the request as `in_scope`. The displayed
+text must then be assembled from the known finding:
+
+- rule: `component_total`;
+- record ordinal: 2;
+- field: `household_size`;
+- observed: 5;
+- expected: 4.
+
+This gate establishes real local inference plus deterministic evidence rendering. It does not
+establish general intent-classification quality across arbitrary questions.
 
 ## Browser test after the gate
 
-After a successful check, start the application with the same exact installed name:
+After a successful check:
 
 ```powershell
 & $py scripts/run_web.py --model "qwen2.5:1.5b"
@@ -47,15 +70,25 @@ Create or reopen a synthetic review, select the component-total finding and ask:
 
 > Why was this finding raised, and what should I verify before confirming it?
 
-Compare the generated explanation against the displayed evidence. It should preserve the
-rule identifier `component_total`, record ordinal 2, observed value 5 and expected value 4.
-It must not claim that the source record has been corrected.
+The result should state that `household_size` is recorded as 5 while the validated component
+total is 4, and direct the supervisor to verify the source component values before deciding.
+The model itself does not author those factual statements.
+
+For an unrelated question, the model may classify it as `out_of_scope`; Python then returns
+a fixed scope message instead of answering the unrelated request.
+
+## Why the architecture changed
+
+The first real `qwen2.5:1.5b` run completed locally but produced unsupported prose about
+survey design, respondents, sampling bias and data-entry systems. Rejecting particular words
+would remain brittle. Constraining the model to an intent enum removes that entire class of
+failure from the factual review surface.
 
 ## If the check fails
 
 Do not download another model automatically and do not enable a cloud endpoint. Preserve the
 complete terminal error. The next action depends on whether the failure is model discovery,
-Ollama startup, local inference, or output-quality validation.
+Ollama startup, structured intent classification or local runtime behaviour.
 
-The final model choice will require a broader measured evaluation covering evidence fidelity,
-unsupported claims, latency and memory use.
+A later evaluation should test intent accuracy, latency and memory use across a broader set
+of representative supervisor questions.

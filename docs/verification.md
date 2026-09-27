@@ -87,16 +87,40 @@ The supplied metadata hash was independently checked against the supplied
 `requirements.lock.txt` before commit. This is an exact-version environment snapshot,
 not a hash-locked wheel supply-chain manifest.
 
+## Explicit network-disabled full-stack proof
+
+The maintainer supplied the output from `scripts/check_offline.py --model "qwen2.5:1.5b"`
+while external networking was unavailable.
+
+Evidence recorded by that run:
+
+- `pip check`: no broken requirements;
+- **94 tests passed** in 3.826 seconds;
+- MCP protocol **2026-07-28** negotiated;
+- MCP HTTP + restart persistence: pass;
+- web HTTP -> MCP -> SQLite + restart: pass;
+- external probes to 1.1.1.1:443, 8.8.8.8:53 and github.com:443 were all unreachable;
+- local model: `qwen2.5:1.5b`;
+- measured local intent inference: **9.52 seconds**;
+- grounded `component_total` explanation matched observed 5 / expected 4 evidence;
+- AI explanation did not write a review decision;
+- explicit confirmed review changed unresolved findings through the trusted review path;
+- final result: `OFFLINE FULL STACK: PASS`.
+
+This establishes automated operation of MCP, web backend, SQLite, local AI and the
+human-controlled decision path without external connectivity once dependencies and the
+local model are installed. It does not by itself establish browser rendering while offline;
+that remains a separate visual/manual observation.
+
 ## Remaining release-hardening gates
 
-The core pathway and dependency snapshot are verified, but the project is not yet
-submission-ready. The following remain open:
+The core pathway, dependency snapshot and automated offline proof are verified. Remaining:
 
-1. Perform an explicit **network-disabled** end-to-end run after all dependencies and the
-   local model are already installed.
-2. Run packaging/install verification from a clean environment.
-3. Expand measured model evaluation beyond the single demonstrated in-scope question,
+1. Run packaging/install verification from a clean environment.
+2. Expand measured model evaluation beyond the single demonstrated in-scope question,
    including out-of-scope intent accuracy and repeated latency measurements.
+3. Optionally retain a screenshot confirming browser rendering while external networking
+   is disabled, without exposing the private session token.
 4. Expand rules/reporting beyond the synthetic four-column prototype as planned.
 5. Prepare final demo-video, product-feedback and friction-log evidence.
 

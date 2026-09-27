@@ -9,7 +9,7 @@
 | 5 | Trusted UI decision path | **Complete.** Explicit human decision saved; persisted review state observed; source CSV unchanged. |
 | 6 | Actual local-model assistance | **Core gate complete; benchmark tooling ready.** Real qwen2.5:1.5b inference observed; 8.46 s online and 9.52 s in the automated offline run. `scripts/evaluate_intent.py` is ready; broader accuracy/latency execution remains pending. |
 | 7 | Windows/offline proof | **Complete (automated).** External probes were unreachable; 94 tests, real MCP/web/SQLite, qwen2.5:1.5b local inference (9.52 s), grounded output and confirmed-review persistence all passed. Manual offline browser rendering remains optional visual evidence. |
-| 8 | Clean install / packaging | **Tooling ready; execution pending.** `scripts/check_clean_install.py` recreates a fresh environment from the committed lock and verifies the installed CLI/package data. |
+| 8 | Clean install / packaging | **Complete.** Fresh temporary environment installed the 30-package runtime snapshot and FieldReady; `pip check`, installed CLI counts (8 rows / 6 findings) and packaged CSV/web assets passed. Build backend resolved to setuptools 84.0.0. |
 | 9 | Broader intent/latency evaluation | **Tooling ready; execution pending.** 16 balanced cases × 2 repeats; >=90% overall accuracy and >=85% recall per class. |
 | 10 | Expand rules and reporting | **Pending.** Add versioned rules, tested exports and clear denominators for a stronger submission demo. |
 
@@ -18,7 +18,7 @@
 **browser -> real MCP evidence -> local AI intent classification -> deterministic grounded
 explanation -> human-controlled review decision**
 
-Do not equate this with final submission readiness. Clean-install verification, broader evaluation and submission artefacts remain open.
+Do not equate this with final submission readiness. Broader evaluation and submission artefacts remain open.
 
 No automated GitHub Actions workflow is required while the agreed development path remains
 local-first and independent of the maintainer's Actions budget.

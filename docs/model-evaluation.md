@@ -92,3 +92,33 @@ Ollama startup, structured intent classification or local runtime behaviour.
 
 A later evaluation should test intent accuracy, latency and memory use across a broader set
 of representative supervisor questions.
+
+
+## Broader intent and latency benchmark
+
+The branch now includes a balanced synthetic benchmark at `evaluations/intent_cases.json`:
+8 in-scope and 8 out-of-scope questions.
+
+Run:
+
+```powershell
+$py = ".\\.venv\\Scripts\\python.exe"
+& $py scripts/evaluate_intent.py --model "qwen2.5:1.5b" --repeats 2
+```
+
+This performs **32 real local classifications** by default and writes
+`runtime/intent-eval.json`.
+
+The acceptance gate is:
+
+- no runtime/schema errors;
+- overall accuracy >= 0.90;
+- in-scope recall >= 0.85;
+- out-of-scope recall >= 0.85.
+
+Latency is reported as mean, median, p95, minimum and maximum. There is no hard latency
+threshold yet because the result is hardware-specific; the measured distribution will be
+used to decide whether the current model is acceptable for the hackathon demo.
+
+The benchmark also verifies that every in-scope result still produces the deterministic
+grounded text and that the evidence reference remains unchanged.

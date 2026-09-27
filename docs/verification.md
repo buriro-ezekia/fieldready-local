@@ -71,19 +71,34 @@ explanation -> human-controlled review decision**
 
 The model has no review-write tool and does not edit source records.
 
+## Tested dependency snapshot
+
+The maintainer generated the exact-version snapshot from the tested Windows virtual
+environment and supplied both generated files. The committed metadata reports:
+
+- Python 3.14.6 / CPython on Windows;
+- 30 exact package pins;
+- required roots `httpx2`, `mcp` and `uvicorn` present;
+- `pip check`: pass;
+- lock SHA-256:
+  `60c438efebbfe9bf42df6b84bf5b35c759c937188bb5d4f7b533e1eb772f6fb2`.
+
+The supplied metadata hash was independently checked against the supplied
+`requirements.lock.txt` before commit. This is an exact-version environment snapshot,
+not a hash-locked wheel supply-chain manifest.
+
 ## Remaining release-hardening gates
 
-The core pathway is verified, but the project is not yet submission-ready. The following
-remain open:
+The core pathway and dependency snapshot are verified, but the project is not yet
+submission-ready. The following remain open:
 
-1. Generate and commit a reproducible dependency lock from the tested environment.
-2. Perform an explicit **network-disabled** end-to-end run after all dependencies and the
+1. Perform an explicit **network-disabled** end-to-end run after all dependencies and the
    local model are already installed.
-3. Run packaging/install verification from a clean environment.
-4. Expand measured model evaluation beyond the single demonstrated in-scope question,
+2. Run packaging/install verification from a clean environment.
+3. Expand measured model evaluation beyond the single demonstrated in-scope question,
    including out-of-scope intent accuracy and repeated latency measurements.
-5. Expand rules/reporting beyond the synthetic four-column prototype as planned.
-6. Prepare final demo-video, product-feedback and friction-log evidence.
+4. Expand rules/reporting beyond the synthetic four-column prototype as planned.
+5. Prepare final demo-video, product-feedback and friction-log evidence.
 
 ## GitHub Actions boundary
 

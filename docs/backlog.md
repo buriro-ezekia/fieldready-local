@@ -10,7 +10,7 @@
 | 6 | Actual local-model assistance | **Core gate complete; benchmark tooling ready.** Real qwen2.5:1.5b inference observed; 8.46 s online and 9.52 s in the automated offline run. `scripts/evaluate_intent.py` is ready; broader accuracy/latency execution remains pending. |
 | 7 | Windows/offline proof | **Complete (automated).** External probes were unreachable; 94 tests, real MCP/web/SQLite, qwen2.5:1.5b local inference (9.52 s), grounded output and confirmed-review persistence all passed. Manual offline browser rendering remains optional visual evidence. |
 | 8 | Clean install / packaging | **Complete.** Fresh temporary environment installed the 30-package runtime snapshot and FieldReady; `pip check`, installed CLI counts (8 rows / 6 findings) and packaged CSV/web assets passed. Build backend resolved to setuptools 84.0.0. |
-| 9 | Broader intent/latency evaluation | **Tooling ready; execution pending.** 16 balanced cases × 2 repeats; >=90% overall accuracy and >=85% recall per class. |
+| 9 | Broader intent/latency evaluation | **Raw-model benchmark failed; hybrid rerun pending.** First run: 50% accuracy, in-scope recall 100%, out-of-scope recall 0%. Production now uses a deterministic scope guard before local inference; the same 16 × 2 benchmark must pass >=90% overall accuracy, >=85% recall per class and 100% expected routing. |
 | 10 | Expand rules and reporting | **Pending.** Add versioned rules, tested exports and clear denominators for a stronger submission demo. |
 
 ## Verified core pathway

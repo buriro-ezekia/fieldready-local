@@ -1,97 +1,88 @@
 # FieldReady Local
 
-A local survey-review assistant under development for the Amazon Developer Hackathon.
-The intended entry is a **simulated Alexa+ experience with a real local MCP backend**;
-this is not a live Alexa+ integration or an Amazon-certified application.
+A local survey-review assistant for the Amazon Developer Hackathon: a **simulated
+Alexa+ experience with a real local MCP backend**, not a live Alexa+ integration or
+an Amazon-certified application. Use synthetic data only.
 
-## Current status: first foundation, not a finished application
+## Current status — M0 remains open
 
-Implemented: deterministic CSV validation, immutable stored source snapshots, SQLite
-review history, explicit CLI confirmation, replay/stale-write protection, paginated
-findings, synthetic fixtures and 41 locally executed core tests.
+Implemented: deterministic CSV checks, immutable source snapshots, SQLite review
+history, explicit confirmation, stale/replay protection, paginated findings, a local
+CLI and an official MCP Python SDK v2 server. The maintainer has reported a successful
+Windows MCP check: protocol 2026-07-28 and persistent review state after restart.
 
-An official MCP Python SDK v2 adapter and a real HTTP integration-check script are
-included, but **MCP execution has not yet been verified**. This implementation environment
-could not download dependencies. No browser UI, AI inference or full offline-product
-verification is claimed. Milestone M0 remains open.
+New in this slice: an authenticated local browser interface, SDK-based web-to-MCP
+client, owned-service launcher and optional local Ollama explanations. **38 new unit
+tests passed with labelled stubs.** The actual new web-to-MCP path, browser rendering
+on Windows, real local inference and complete offline workflow remain verification
+gates. See [current evidence and browser guide](docs/browser.md).
 
-## Try the core now — no package installation or GitHub Actions required
+## Run the core without package installation
 
-From the repository root, using Python 3.11 or newer:
+From the repository root, with Python 3.11 or newer:
 
 ```powershell
 python scripts/check_local.py
 python scripts/fieldready.py demo
 ```
 
-Use `py` instead of `python` where that is your configured Windows launcher.
-The synthetic demo has **8 records, 6 findings affecting 6 records**, and **2 component-total
-checks that cannot be evaluated** because a prerequisite is missing or invalid.
-The demo prints its run ID; identifiers such as `0001` retain their leading zeros.
-
-Local storage defaults to `.fieldready-local/fieldready.sqlite3` under your home directory,
-not inside the repository. `--db PATH` overrides it. Each `demo` call creates a new run;
-use the printed run ID to reopen a previous run, not a new `demo` invocation.
+The synthetic example contains **8 records, 6 findings affecting 6 records**, and
+**2 non-evaluable component-total checks**. IDs retain leading zeros. Each `demo`
+invocation creates a new run. Use the printed run ID to reopen an existing review:
 
 ```powershell
 python scripts/fieldready.py summary RUN_ID
 python scripts/fieldready.py findings RUN_ID
 python scripts/fieldready.py review FINDING_ID --status confirmed --reason "Checked against the synthetic answer key" --revision 0 --request-id my-review-001 --confirm
-python scripts/fieldready.py summary RUN_ID
 ```
 
-Replace `RUN_ID` and `FINDING_ID` with printed values. Without `--confirm`, the review
-command refuses to save. The model-facing MCP service has **no review-write tool**.
-A confirmed finding means the supervisor completed that review, not that the source
-record was corrected. `open` and `follow_up` count as unresolved; `confirmed` and
-`dismissed` count as reviewed.
+Local state defaults to `.fieldready-local/fieldready.sqlite3` under your home directory,
+not the repository. `--db PATH` overrides it. Without explicit confirmation, no review
+is saved. Confirmed means reviewed, not corrected. Open/follow-up remain unresolved.
 
-## MCP integration: next verification gate
+## Install the optional MCP dependencies and verify
 
-Use an isolated environment and the opt-in integration check:
+Use your existing virtual environment, or create one with `python -m venv .venv` first:
 
 ```powershell
-python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e ".[mcp]"
+.\.venv\Scripts\python.exe -m pip check
 .\.venv\Scripts\python.exe scripts/check_local.py --integration
+.\.venv\Scripts\python.exe scripts/check_web.py
 ```
 
-The integration check starts a real local server and SDK client, validates a registered
-synthetic batch over Streamable HTTP, checks tool exposure, stops the server, confirms
-a review through the trusted CLI, restarts the server and reads the saved state through
-MCP. **Missing dependencies return a non-zero status, not a successful skip.**
+Stop on an error. Missing dependencies return a non-zero status, never a successful
+skip. Both integration checks use temporary databases. The web check exercises real
+HTTP -> MCP -> SQLite and restart persistence; it does not render a browser or run AI.
 
-No resolved dependency lockfile is included yet. The SDK/client versions must be
-installed, tested and locked; ranges in `pyproject.toml` are not a reproducible lock.
-See [setup instructions](docs/setup.md) and [verification evidence](docs/verification.md).
+## Open the local browser workspace
 
-## Cost and privacy boundaries
+```powershell
+.\.venv\Scripts\python.exe scripts/run_web.py
+```
 
-No cloud compute, hosted database, external inference API or paid runner is required by
-this contribution. The core uses only Python's standard library. Initial dependency
-and future model downloads still need internet access. Existing hardware, electricity
-and connectivity are not included in the zero-additional-service-cost target.
+Open the full local session link printed in the terminal and keep its token private.
+Create a synthetic review, inspect a finding, enter a reason, explicitly confirm a
+decision and reopen the saved review. Press Ctrl+C normally to stop owned services.
+Validation/evidence use real MCP; human-approved writes use the trusted control surface.
 
-**No GitHub Actions workflow is added.** The maintainer reports budget-limit failures;
-local test evidence remains separate from GitHub job status. Billing and repository
-protection settings have not been changed.
+AI is disabled by default. The review interface does not need a model. An optional
+`--model "YOUR_INSTALLED_MODEL:TAG"` starts a separate local-only Ollama server.
+The application never downloads a model or substitutes a paid API. See the
+[browser/model guide](docs/browser.md) before enabling it.
 
-Use only the supplied fictional questionnaire and synthetic records at this stage.
-The prototype has not undergone a production privacy/security review. The MCP service
-is loopback-only and requires a locally generated token; do not tunnel or expose it.
-The local database is not encrypted, and its history is not tamper-proof.
+## Cost, privacy and licence
 
-## Structure and next work
+No GitHub Actions workflow is added or dispatched. Budget-blocked jobs are not treated
+as test passes or code failures; no billing/protection setting is changed. Runtime
+uses your existing computer and SQLite, excluding electricity and connectivity costs.
+No hosted database, cloud compute or paid inference service is required.
 
-- `src/fieldready/`: rules, persistence, local CLI and MCP adapter.
-- `tests/`: standard-library core and request-guard tests.
-- `scripts/`: source-checkout launcher and separate core/MCP checks.
-- `docs/`: setup, verification, architecture and remaining M0 work.
+Do not tunnel/expose these services or commit real records, databases, model weights,
+credentials or raw logs. The local database is not encrypted or tamper-proof. The
+prototype has not had a production security/privacy audit. Package ranges are not a
+resolved lockfile; dependency locking and packaging verification remain pending.
 
-The next gate is successful real MCP execution on a dependency-enabled machine, followed
-by a minimal browser interface and measured, actual local-model explanations. The
-application will not silently substitute paid APIs when a local model is unavailable.
-
-## Licence
-
-Apache-2.0. The repository's original `LICENSE` is preserved.
+Apache-2.0: the original `LICENSE` is preserved. Earlier foundation evidence is in
+[docs/verification.md](docs/verification.md); current additions and limitations are in
+[docs/browser.md](docs/browser.md).

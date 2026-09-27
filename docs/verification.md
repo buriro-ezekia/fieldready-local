@@ -1,5 +1,10 @@
 # Verification record — 27 September 2026
 
+> Historical record for foundation commit `6f5824e`. The maintainer subsequently
+> reported successful Windows core/MCP execution. Current browser additions, 38 new
+> unit-test results and remaining gates are documented in [browser.md](browser.md).
+> The limitations below describe the initial contribution, not the current source tree.
+
 ## Executed in the implementation environment
 
 Environment: Linux, Python 3.13.5. Command: `python scripts/check_local.py`.
@@ -24,24 +29,25 @@ source integrity checks, transaction rollback, decision confirmation, request re
 stale revisions and persistence across separate CLI processes. Guard tests check
 credentials, Host, Origin, duplicate security headers and lifespan forwarding.
 
-## Not executed successfully / not yet implemented
+## Not executed successfully / not yet implemented in the initial contribution
 
 - **MCP HTTP:** `python scripts/check_mcp.py` returned status 2 with missing `mcp` and
   `httpx2` dependencies. No real MCP handshake, SDK tool call or restart-through-MCP
-  result has been observed. No stubbed protocol result is counted as a pass.
+  result had been observed then. No stubbed protocol result is counted as a pass.
 - **Installation and lock:** dependency download failed due to name resolution in
   this environment. Package ranges are not verified pins. `uv.lock` is not fabricated.
-- **Browser interface and model:** not implemented in this contribution; no inference,
-  model performance, voice, live Alexa+ connection or UI result is claimed.
-- **Windows and complete offline workflow:** not tested here. Cross-platform code is
+- **Browser interface and model:** not implemented in the initial contribution; no inference,
+  model performance, voice, live Alexa+ connection or UI result was claimed.
+- **Windows and complete offline workflow:** not tested in that environment. Cross-platform code is
   not the same thing as measured Windows compatibility.
 - **GitHub Actions:** no workflow added or dispatched. The maintainer reports a budget
-  limitation; no particular failed Actions run was diagnosed in this contribution.
-- **Lint/type/packaging:** source parsing is checked separately, but Ruff, static type
-  checking and install/build verification have not been run.
+  limitation; no particular failed Actions run was diagnosed in that contribution.
+- **Lint/type/packaging:** source parsing was checked separately, but Ruff, static type
+  checking and install/build verification had not been run.
 
-## Acceptance gate
+## Current acceptance gate
 
-This is a foundation contribution, not completed M0. Run the optional integration check
-on a dependency-enabled machine, review any failures, resolve/lock versions, and only
-then add the browser and real local-model proof. Keep outcomes and pending work separate.
+The Windows core/MCP gate has maintainer-supplied evidence. Next, execute the new
+web-to-MCP check, inspect the browser and measure real local-model explanations.
+Resolve/lock the tested dependencies and keep outcomes separate from pending work.
+M0 is not yet complete. See [browser.md](browser.md).

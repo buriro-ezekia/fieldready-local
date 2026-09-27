@@ -30,14 +30,14 @@ def request(port, token, path, body=None):
 
 
 @contextmanager
-def web_server(db, gateway, token):
+def web_server(db, gateway, token, explainer=None):
     import uvicorn
     from fieldready.web_app import WebApp
 
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
-    server = uvicorn.Server(uvicorn.Config(WebApp(db, gateway, token, port),
+    server = uvicorn.Server(uvicorn.Config(WebApp(db, gateway, token, port, explainer),
         host="127.0.0.1", port=port, access_log=False, log_level="error"))
     thread = threading.Thread(target=server.run, daemon=True)
     thread.start()

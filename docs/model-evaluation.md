@@ -122,3 +122,47 @@ used to decide whether the current model is acceptable for the hackathon demo.
 
 The benchmark also verifies that every in-scope result still produces the deterministic
 grounded text and that the evidence reference remains unchanged.
+
+
+## First broader benchmark result and redesign
+
+The first 16-case × 2-repeat benchmark of the **raw binary local-model classifier** failed
+its acceptance threshold:
+
+- evaluations: 32;
+- correct: 16;
+- accuracy: **0.50**;
+- in-scope recall: **1.00**;
+- out-of-scope recall: **0.00**;
+- confusion: 16 in_scope->in_scope and 16 out_of_scope->in_scope;
+- mean model latency: **1.824 s**;
+- median: **1.54 s**;
+- p95: **1.88 s**;
+- minimum: **1.14 s**;
+- maximum: **11.16 s**.
+
+The model therefore behaved like an always-in-scope classifier on this test set. This is
+not accepted as production behaviour.
+
+### Hybrid production router
+
+The production path now places a deterministic scope guard before local inference:
+
+1. clearly unrelated or task-abandoning requests are rejected before the model;
+2. review-related questions are allowed through to qwen2.5:1.5b;
+3. the model still performs the bounded in-scope/out-of-scope classification for those
+   review-related questions;
+4. Python remains solely responsible for factual explanation text.
+
+The guard is intentionally narrow. It recognises validation/review vocabulary and a small
+set of context-shortcuts such as "Why?" and "What should I verify?". Explicit attempts to
+abandon the selected review task override positive markers.
+
+All 16 benchmark cases are now encoded as regression expectations for the deterministic
+gate: all 8 unrelated cases must be rejected before inference and all 8 review-related cases
+must still reach the local model.
+
+The benchmark script now measures the **combined production router**, reports how many
+requests were handled by the deterministic guard versus the local model, and separates
+model latency from end-to-end latency. A rerun is required before this redesign is counted
+as passed.

@@ -56,8 +56,9 @@ def main() -> int:
         line = raw.strip()
         if not line or line.startswith("#") or line.startswith("-e "):
             continue
-        # Never lock the current editable project path.
-        if canonical(line.split(" @ ", 1)[0]) == "fieldready-local":
+        # Never lock the current project itself, whether editable, direct-url or installed.
+        candidate_name = line.split(" @ ", 1)[0].split("==", 1)[0].strip()
+        if canonical(candidate_name) == "fieldready-local":
             continue
         if "==" not in line:
             print("LOCK SNAPSHOT: FAIL — non-version-pinned dependency encountered: " + line,

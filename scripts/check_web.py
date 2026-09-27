@@ -1,5 +1,6 @@
 """Real web HTTP -> MCP -> SQLite check. Does NOT launch a browser or run a model."""
 import argparse
+import asyncio
 import http.client
 import importlib.util
 import json
@@ -72,7 +73,13 @@ def main() -> int:
         mcp_token, web_token = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
         with serve(db, mcp_token) as url:
             mcp_port = int(url.split(":")[2].split("/")[0])
-            with web_server(db, MCPGateway(mcp_port, mcp_token), web_token) as port:
+            gateway = MCPGateway(mcp_port, mcp_token)
+            health = asyncio.run(gateway.ping())
+            require(health["protocol"] >= "2025-11-25", "MCP health probe negotiated an old protocol.")
+            require(set(health["tools"]) == {"validate_batch", "list_findings", "get_review_summary"},
+                    "MCP health probe found an unexpected tool surface.")
+            print("MCP health probe:", health["protocol"], ", ".join(health["tools"]))
+            with web_server(db, gateway, web_token) as port:
                 require(request(port, "wrong", "/api/info")[0] == 401, "Missing authentication was accepted.")
                 status, initial = request(port, web_token, "/api/demo", {"request_id": "web-demo"})
                 require(status == 200 and initial["finding_count"] == 6, "Web/MCP validation failed.")

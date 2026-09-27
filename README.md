@@ -92,19 +92,12 @@ not download a model or silently substitute a hosted API.
 
 ## Release hardening
 
-The verified core pathway is not yet the final submission. The branch now includes two
-explicit release-hardening tools, but their results remain **pending until executed on the
-maintainer's tested Windows environment**.
+The verified core pathway is not yet the final submission. The tested Windows dependency
+snapshot is now committed; the explicit network-disabled full-stack proof remains pending.
 
-Capture the exact installed dependency versions while still online:
-
-```powershell
-$py = ".\\.venv\\Scripts\\python.exe"
-& $py scripts/write_lock.py
-```
-
-This generates `requirements.lock.txt` and `docs/environment-lock.json` from the existing
-virtual environment without resolving or downloading packages.
+The committed `requirements.lock.txt` contains the exact package versions from the maintainer-tested
+Windows virtual environment; `docs/environment-lock.json` records Python/platform metadata and the
+lock SHA-256. This is an exact-version environment snapshot rather than a hash-locked wheel manifest.
 
 After dependencies and `qwen2.5:1.5b` are already installed, disconnect external networking
 and run:

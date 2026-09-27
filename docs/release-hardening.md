@@ -116,3 +116,41 @@ Do not commit local databases, model weights, tokens, raw logs or real survey re
 
 No GitHub Actions workflow is required for this release-hardening stage. The maintainer's
 reported Actions budget limitation remains independent of the local verification result.
+
+
+## 6. Clean-install and packaging verification
+
+With networking available, run:
+
+```powershell
+$py = ".\\.venv\\Scripts\\python.exe"
+& $py scripts/check_clean_install.py
+```
+
+The script validates the committed lock hash and tested Python/platform metadata, creates
+a fresh temporary virtual environment, installs the exact runtime snapshot, installs the
+build backend required by `pyproject.toml`, installs FieldReady from the local checkout
+without re-resolving runtime dependencies, runs `pip check`, executes the installed CLI
+against the synthetic fixture and verifies bundled CSV/web assets.
+
+It writes `runtime/clean-install-result.json`. A successful run ends with:
+
+```text
+CLEAN INSTALL + PACKAGING: PASS
+```
+
+The script reports the exact setuptools version resolved for the build. Because
+`pyproject.toml` currently specifies `setuptools>=77`, that build-backend version is
+evidence from the run rather than a pre-pinned supply-chain guarantee.
+
+## 7. Broader local-model evaluation
+
+Run:
+
+```powershell
+& $py scripts/evaluate_intent.py --model "qwen2.5:1.5b" --repeats 2
+```
+
+This executes 16 balanced synthetic cases twice (32 real classifications), writes
+`runtime/intent-eval.json`, and requires >=90% overall accuracy plus >=85% recall for
+both `in_scope` and `out_of_scope`. It also reports mean/median/p95 latency.

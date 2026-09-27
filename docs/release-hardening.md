@@ -154,3 +154,15 @@ Run:
 This executes 16 balanced synthetic cases twice (32 real classifications), writes
 `runtime/intent-eval.json`, and requires >=90% overall accuracy plus >=85% recall for
 both `in_scope` and `out_of_scope`. It also reports mean/median/p95 latency.
+
+
+## Cross-platform lock hashing
+
+The lock digest is defined over UTF-8 text with canonical LF line endings. Git may
+materialise text as CRLF on Windows depending on checkout configuration, so raw-byte
+hashing is not a valid cross-platform integrity check.
+
+Both the lock writer and clean-install verifier now normalise CRLF/CR to LF before
+calculating SHA-256. `.gitattributes` also requests LF for the lock and metadata files.
+This changes neither the dependency pins nor the recorded digest; it makes verification
+consistent across Windows and POSIX checkouts.

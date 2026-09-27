@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import evaluate_intent  # noqa: E402
+from fieldready.local_model import scope_guard  # noqa: E402
 
 
 class EvaluationDesignTests(unittest.TestCase):
@@ -21,6 +22,16 @@ class EvaluationDesignTests(unittest.TestCase):
             self.assertTrue(case["question"].strip())
             counts[case["expected"]] += 1
         self.assertEqual(counts, {"in_scope": 8, "out_of_scope": 8})
+
+    def test_production_scope_guard_routes_benchmark_cases(self):
+        cases = json.loads((ROOT / "evaluations" / "intent_cases.json").read_text(encoding="utf-8"))
+        for case in cases:
+            with self.subTest(case=case["id"]):
+                decision = scope_guard(case["question"])
+                if case["expected"] == "out_of_scope":
+                    self.assertEqual(decision, "out_of_scope")
+                else:
+                    self.assertIsNone(decision)
 
     def test_percentile_uses_nearest_rank(self):
         values = [1.0, 2.0, 3.0, 4.0]

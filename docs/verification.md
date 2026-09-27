@@ -1,53 +1,99 @@
 # Verification record — 27 September 2026
 
-> Historical record for foundation commit `6f5824e`. The maintainer subsequently
-> reported successful Windows core/MCP execution. Current browser additions, 38 new
-> unit-test results and remaining gates are documented in [browser.md](browser.md).
-> The limitations below describe the initial contribution, not the current source tree.
+## Current Windows evidence supplied by the maintainer
 
-## Executed in the implementation environment
+The following checks were executed on the maintainer's Windows environment against the
+`feat/mcp-validation-slice` branch. These are maintainer-supplied results, not a rerun
+inside the implementation environment.
 
-Environment: Linux, Python 3.13.5. Command: `python scripts/check_local.py`.
-Result: **41 tests passed**, no skipped tests. The suite includes 31 rule/storage/CLI
-tests and 10 ASGI request-guard tests. Each run uses synthetic data and temporary databases.
+### Core and MCP
 
-The independent fixture expectation is 8 records, 6 findings affecting 6 records,
-with component-total evaluation unavailable for records 6 and 7. Expected findings:
+- **85 tests passed** after the first structured-output hardening pass. A later test count may
+  increase as additional safeguards are added; the important criterion is the reported `OK`.
+- Real MCP negotiated protocol **2026-07-28**.
+- The synthetic batch returned **8 records, 6 findings affecting 6 records**.
+- Component-total evaluation was available for 6 records and unavailable for records 6 and 7.
+- A confirmed review persisted after the MCP server restarted: **1 confirmed, 5 unresolved**.
+- The real integration check ended with:
+  `MCP HTTP + RESTART PERSISTENCE: PASS`.
 
-| Record ordinal | Rule |
-| --- | --- |
-| 2 | component_total |
-| 3 | duplicate_id |
-| 4 | duplicate_id |
-| 5 | missing_id |
-| 6 | missing_count |
-| 7 | invalid_count |
+### Web -> MCP -> SQLite
 
-The suite checks UTF-8/BOM, leading-zero IDs, malformed/oversized input, missingness,
-multiple findings on one row, pagination, unknown identifiers, source preservation,
-source integrity checks, transaction rollback, decision confirmation, request replay,
-stale revisions and persistence across separate CLI processes. Guard tests check
-credentials, Host, Origin, duplicate security headers and lifespan forwarding.
+The maintainer ran the real web integration check. It returned the expected synthetic counts,
+preserved one confirmed finding after restart and ended with:
 
-## Not executed successfully / not yet implemented in the initial contribution
+`WEB HTTP -> MCP -> SQLITE + RESTART: PASS (browser rendering and local inference NOT tested)`
 
-- **MCP HTTP:** `python scripts/check_mcp.py` returned status 2 with missing `mcp` and
-  `httpx2` dependencies. No real MCP handshake, SDK tool call or restart-through-MCP
-  result had been observed then. No stubbed protocol result is counted as a pass.
-- **Installation and lock:** dependency download failed due to name resolution in
-  this environment. Package ranges are not verified pins. `uv.lock` is not fabricated.
-- **Browser interface and model:** not implemented in the initial contribution; no inference,
-  model performance, voice, live Alexa+ connection or UI result was claimed.
-- **Windows and complete offline workflow:** not tested in that environment. Cross-platform code is
-  not the same thing as measured Windows compatibility.
-- **GitHub Actions:** no workflow added or dispatched. The maintainer reports a budget
-  limitation; no particular failed Actions run was diagnosed in that contribution.
-- **Lint/type/packaging:** source parsing was checked separately, but Ruff, static type
-  checking and install/build verification had not been run.
+This established the real HTTP -> MCP -> SQLite integration independently of browser rendering.
 
-## Current acceptance gate
+### Browser review workflow
 
-The Windows core/MCP gate has maintainer-supplied evidence. Next, execute the new
-web-to-MCP check, inspect the browser and measure real local-model explanations.
-Resolve/lock the tested dependencies and keep outcomes separate from pending work.
-M0 is not yet complete. See [browser.md](browser.md).
+The browser workspace was opened successfully on Windows. The maintainer demonstrated:
+
+- the saved synthetic review reopening correctly;
+- 8 records, 6 findings and 6 affected records;
+- two confirmed findings and **4 unresolved findings** after manual review;
+- the component-total evidence showing observed **5** and expected **4**;
+- an explicit human-confirmed review decision;
+- the original CSV remaining unchanged.
+
+### Real local AI interaction
+
+The browser was launched with the already installed local model `qwen2.5:1.5b`.
+
+For the selected `component_total` finding, the supervisor asked:
+
+> Why is this record flagged, and what should I verify?
+
+The browser returned:
+
+> Rule component_total · record ordinal 2. The finding was raised because household_size is
+> recorded as 5, while the validated component total is 4. Verification: check the source
+> component values and household_size before recording a review outcome.
+
+The interface also reported:
+
+- local model: `qwen2.5:1.5b`;
+- elapsed time: **8.46 seconds**;
+- evidence reference ending in `:1 / component_total`;
+- no review decision was saved by the AI path.
+
+Under the current architecture, the local model classifies the question as in-scope or
+out-of-scope. Python renders the factual explanation from verified evidence. This design was
+introduced after earlier free-form model output produced unsupported speculation.
+
+## What this establishes
+
+The following core pathway has now been demonstrated on Windows:
+
+**browser -> real MCP evidence -> local AI intent classification -> deterministic grounded
+explanation -> human-controlled review decision**
+
+The model has no review-write tool and does not edit source records.
+
+## Remaining release-hardening gates
+
+The core pathway is verified, but the project is not yet submission-ready. The following
+remain open:
+
+1. Generate and commit a reproducible dependency lock from the tested environment.
+2. Perform an explicit **network-disabled** end-to-end run after all dependencies and the
+   local model are already installed.
+3. Run packaging/install verification from a clean environment.
+4. Expand measured model evaluation beyond the single demonstrated in-scope question,
+   including out-of-scope intent accuracy and repeated latency measurements.
+5. Expand rules/reporting beyond the synthetic four-column prototype as planned.
+6. Prepare final demo-video, product-feedback and friction-log evidence.
+
+## GitHub Actions boundary
+
+No GitHub Actions workflow is required for this evidence. The maintainer reports an Actions
+budget limitation. A budget-blocked job is neither a code failure nor a successful test.
+Local verification remains the source of truth for the current development workflow.
+
+## Historical implementation-environment evidence
+
+The initial foundation was tested in Linux/Python 3.13.5 with 41 passing tests. Subsequent
+browser/model unit checks were also run in the implementation environment with explicit stubs.
+Those historical checks did not establish Windows MCP, browser rendering or real inference;
+the maintainer-supplied Windows evidence above now covers those core gates.

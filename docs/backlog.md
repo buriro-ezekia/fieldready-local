@@ -7,9 +7,11 @@
 | 3 | Resolve dependency environment | **Complete.** The maintainer generated the tested Windows exact-version snapshot; `requirements.lock.txt` and `docs/environment-lock.json` are committed. Metadata reports Python 3.14.6, 30 packages, required MCP roots present and `pip check` pass. |
 | 4 | Minimal browser interface | **Complete.** Windows browser displayed evidence retrieved through the real MCP path. |
 | 5 | Trusted UI decision path | **Complete.** Explicit human decision saved; persisted review state observed; source CSV unchanged. |
-| 6 | Actual local-model assistance | **Core gate complete.** Real qwen2.5:1.5b inference observed; 8.46 s for the demonstrated in-scope question. Model only classifies scope; Python renders factual evidence. Broader evaluation remains pending. |
-| 7 | Windows/offline proof | **Automated offline gate complete.** External probes were unreachable; 94 tests, real MCP/web/SQLite, qwen2.5:1.5b local inference (9.52 s), grounded output and confirmed-review persistence all passed. Manual offline browser rendering remains optional visual evidence. |
-| 8 | Expand rules and reporting | **Pending.** Add versioned rules, tested exports and clear denominators for a stronger submission demo. |
+| 6 | Actual local-model assistance | **Core gate complete; benchmark tooling ready.** Real qwen2.5:1.5b inference observed; 8.46 s online and 9.52 s in the automated offline run. `scripts/evaluate_intent.py` is ready; broader accuracy/latency execution remains pending. |
+| 7 | Windows/offline proof | **Complete (automated).** External probes were unreachable; 94 tests, real MCP/web/SQLite, qwen2.5:1.5b local inference (9.52 s), grounded output and confirmed-review persistence all passed. Manual offline browser rendering remains optional visual evidence. |
+| 8 | Clean install / packaging | **Tooling ready; execution pending.** `scripts/check_clean_install.py` recreates a fresh environment from the committed lock and verifies the installed CLI/package data. |
+| 9 | Broader intent/latency evaluation | **Tooling ready; execution pending.** 16 balanced cases × 2 repeats; >=90% overall accuracy and >=85% recall per class. |
+| 10 | Expand rules and reporting | **Pending.** Add versioned rules, tested exports and clear denominators for a stronger submission demo. |
 
 ## Verified core pathway
 

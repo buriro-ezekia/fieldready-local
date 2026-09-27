@@ -60,6 +60,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--keep", action="store_true",
                         help="Keep the clean environment under runtime/clean-install-env for inspection.")
+    parser.add_argument("--output", type=Path,
+                        default=ROOT / "runtime" / "clean-install-result.json")
     args = parser.parse_args()
 
     try:
@@ -123,7 +125,10 @@ def main() -> int:
                 "installed_demo_finding_count": result["finding_count"],
                 "package_data": package_probe,
             }
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
             print(json.dumps(report, indent=2))
+            print("WROTE:", args.output)
             print("CLEAN INSTALL + PACKAGING: PASS")
             print("Note: setuptools is currently range-constrained by pyproject.toml; its resolved version is reported above.")
             return 0

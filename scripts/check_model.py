@@ -88,15 +88,17 @@ def main() -> int:
         print("No model was downloaded and no cloud fallback was used.", file=sys.stderr)
         return 2
 
-    text = result["text"].lower()
-    required = ("component_total", "2")
-    if not all(term in text for term in required):
-        print("LOCAL MODEL CHECK: FAIL — explanation omitted the required rule_id or record ordinal.",
-              file=sys.stderr)
-        print("MODEL OUTPUT:", result["text"], file=sys.stderr)
-        return 2
-    if result["rule_id"] != "component_total" or result["finding_id"] != finding["finding_id"]:
+    expected = {
+        "rule_id": "component_total",
+        "record_ordinal": 2,
+        "observed": "5",
+        "expected": "4",
+        "finding_id": finding["finding_id"],
+    }
+    changed = {key: (expected[key], result.get(key)) for key in expected if result.get(key) != expected[key]}
+    if changed:
         print("LOCAL MODEL CHECK: FAIL — returned evidence reference changed unexpectedly.", file=sys.stderr)
+        print("MISMATCH:", changed, file=sys.stderr)
         return 2
 
     print("LOCAL MODEL:", result["model"])

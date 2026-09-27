@@ -23,10 +23,11 @@ browser -> real MCP evidence -> local AI intent classification -> deterministic 
 explanation -> human-controlled review decision. Real qwen2.5:1.5b inference was observed
 at 8.46 seconds for the demonstrated question.
 
-Release hardening remains separate from the verified core. scripts/write_lock.py must
-generate the exact-version snapshot from the maintainer's tested virtual environment;
-do not hand-author requirements.lock.txt or docs/environment-lock.json. scripts/check_offline.py
-must run while external connectivity probes are unavailable before offline status is
-claimed. See docs/release-hardening.md.
+The maintainer-generated exact-version dependency snapshot is committed and the automated
+offline full-stack gate has passed with external probes unavailable. Do not overstate this
+as manual browser-rendering-while-offline evidence unless a separate visual observation is
+recorded. Clean-install/package verification and broader intent/latency evaluation are the
+next evidence gates; do not mark them complete before maintainer execution. See
+docs/release-hardening.md and docs/model-evaluation.md.
 
 No live Alexa+ integration or Amazon certification is claimed.

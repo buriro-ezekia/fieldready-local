@@ -98,8 +98,8 @@ production security audit and does not protect against malware running as the sa
 
 ## Optional real local-model connection
 
-First complete the browser check without AI. The default explicitly shows **AI disabled**;
-no templated text is presented as model output. To inspect already installed models:
+First complete the browser workflow without AI. The default explicitly shows **AI disabled**.
+To inspect already installed models:
 
 ```powershell
 ollama list
@@ -108,28 +108,39 @@ ollama list
 Then stop the launcher normally and restart with an exact installed local name:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/run_web.py --model "YOUR_INSTALLED_MODEL:TAG"
+.\.venv\Scripts\python.exe scripts/run_web.py --model "qwen2.5:1.5b"
 ```
 
-The launcher starts its own `ollama serve` on 127.0.0.1:11435 with `OLLAMA_NO_CLOUD=1`.
-It does not modify, reuse or stop an existing Ollama server on the normal port. It
-never downloads a model or silently falls back to cloud inference. Install/download
-work, model licences and laptop suitability must be checked separately.
+The launcher starts its own `ollama serve` on 127.0.0.1:11435 with
+`OLLAMA_NO_CLOUD=1`. It does not reuse the normal Ollama server, download a model,
+or fall back to cloud inference.
 
-The connector uses `/api/tags`, `/api/show` and `/api/chat`. It rejects remote model
-metadata and requires local model metadata. Requests go to a literal loopback IP
-without proxies or redirects. It sends one selected finding and four computed counts,
-not full CSVs, record identifiers or supervisor reasons. It bounds the question and
-response, and provides no tools to the model. Generation cannot write a decision.
+### Grounding boundary
 
-The UI labels returned text as model-generated and shows the model, timing and evidence
-reference. The configured model is not proof of successful inference. A returned answer
-is not proof of factual accuracy; compare its claims against the displayed evidence.
-Multi-turn agent planning, automated correction, voice and systematic model evaluation
-are not implemented in this slice.
+The model does **not** generate factual review prose. It only classifies the supervisor's
+question as `in_scope` or `out_of_scope` using a constrained JSON schema. Python then
+renders the explanation from the verified finding fields. The model never receives a
+review-write tool, source CSV, record identifier, supervisor reason, shell, SQL or network
+tool.
+
+For an in-scope question, the displayed explanation is assembled from the selected
+finding's rule identifier, record ordinal, field, observed value and expected value.
+For an out-of-scope question, Python returns a fixed scope message. This prevents model
+speculation from entering the factual review surface.
+
+The first real qwen2.5:1.5b run motivated this design: free-form model prose introduced
+unsupported statements about survey design, respondents, sampling bias and data-entry
+systems. The current architecture removes that failure class instead of trying to maintain
+an expanding keyword blacklist.
+
+The UI reports the model name, timing, evidence reference and a notice that local AI
+classified the question while the factual wording came from verified evidence. Generation
+cannot write a decision.
+
+See [model evaluation](model-evaluation.md) for the real-inference acceptance gate.
 
 Official references: [Ollama local-only configuration](https://docs.ollama.com/faq),
-[chat API](https://docs.ollama.com/api/chat), [model metadata](https://docs.ollama.com/api/show),
+[chat API](https://docs.ollama.com/api/chat), and
 [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk).
 
 ## Cost and repository boundaries

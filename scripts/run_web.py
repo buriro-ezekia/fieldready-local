@@ -48,6 +48,20 @@ def service(command, port, env):
                     child.wait(timeout=5)
 
 
+def wait_for_mcp(gateway, timeout=10):
+    """Wait for an MCP handshake and exact tool discovery; do not call a fake tool request."""
+    deadline = time.monotonic() + timeout
+    last_error = None
+    while True:
+        try:
+            return asyncio.run(gateway.ping())
+        except RuntimeError as exc:
+            last_error = exc
+            if time.monotonic() >= deadline:
+                raise RuntimeError("MCP server opened its port but did not become protocol-ready.") from last_error
+            time.sleep(0.2)
+
+
 def main() -> int:
     from fieldready.mcp_client import MCPGateway
     from fieldready.local_model import LocalExplainer
@@ -83,20 +97,14 @@ def main() -> int:
         with ExitStack() as stack:
             stack.enter_context(service([sys.executable, "-m", "fieldready.mcp_server",
                                          "--db", str(args.db), "--port", str(args.mcp_port)], args.mcp_port, env))
-            # Exercise the real client and server before announcing the browser session.
-            async def probe_mcp():
-                try:
-                    await gateway.call("list_findings", {"run_id": "startup-health-probe"})
-                except ValueError:
-                    return  # Expected tool error for an intentionally nonexistent run.
-                raise RuntimeError("Unexpected MCP startup probe result.")
-            asyncio.run(probe_mcp())
+            health = wait_for_mcp(gateway)
             if args.model:
                 ollama = shutil.which("ollama")
                 if not ollama:
                     raise ValueError("Ollama is not installed or not on PATH. Omit --model to use the review UI.")
                 model_env = env | {"OLLAMA_HOST": f"127.0.0.1:{args.ollama_port}", "OLLAMA_NO_CLOUD": "1"}
                 stack.enter_context(service([ollama, "serve"], args.ollama_port, model_env))
+            print(f"MCP ready: protocol {health['protocol']}; tools: {', '.join(health['tools'])}", flush=True)
             print("Open this LOCAL SESSION LINK in your browser; keep the full link private:", flush=True)
             print(f"http://127.0.0.1:{args.web_port}/#token={token}", flush=True)
             print("AI: " + (args.model or "disabled (review workflow remains available)"), flush=True)

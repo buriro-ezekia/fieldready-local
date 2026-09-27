@@ -4,7 +4,6 @@ This gate may use package indexes to populate the clean environment. It does not
 offline runtime; scripts/check_offline.py covers that separately.
 """
 import argparse
-import hashlib
 import json
 import os
 import platform
@@ -13,6 +12,8 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+from write_lock import text_sha256
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK = ROOT / "requirements.lock.txt"
@@ -44,9 +45,16 @@ def verify_lock() -> dict:
     if not LOCK.is_file() or not META.is_file():
         raise RuntimeError("Committed lock files are missing.")
     metadata = json.loads(META.read_text(encoding="utf-8"))
-    digest = hashlib.sha256(LOCK.read_bytes()).hexdigest()
+    lock_text = LOCK.read_text(encoding="utf-8")
+    digest = text_sha256(lock_text)
     if digest != metadata.get("lock_sha256"):
-        raise RuntimeError("requirements.lock.txt does not match docs/environment-lock.json.")
+        raise RuntimeError(
+            "requirements.lock.txt content does not match docs/environment-lock.json "
+            "after canonical line-ending normalisation."
+        )
+    hash_mode = metadata.get("lock_hash_mode", "utf8-canonical-lf")
+    if hash_mode != "utf8-canonical-lf":
+        raise RuntimeError("Unsupported lock hash mode: " + str(hash_mode))
     if platform.python_version() != metadata.get("python_version"):
         raise RuntimeError(
             f"Use the tested Python {metadata.get('python_version')}; current is {platform.python_version()}."

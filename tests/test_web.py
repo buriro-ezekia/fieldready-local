@@ -16,6 +16,12 @@ class StubGateway:
         self.store = Store(db)
         self.calls = []
 
+    async def ping(self):
+        return {
+            "protocol": "2026-07-28",
+            "tools": ["get_review_summary", "list_findings", "validate_batch"],
+        }
+
     async def call(self, name, args):
         self.calls.append(name)
         if name == "validate_batch":
@@ -152,6 +158,11 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         _, data, _ = await self.request("/api/info")
         self.assertEqual(data["runs"][0]["id"], run)
         self.assertIsNone(data["model"])
+        self.assertEqual(data["mcp"]["protocol"], "2026-07-28")
+        self.assertEqual(
+            data["mcp"]["tools"],
+            ["get_review_summary", "list_findings", "validate_batch"],
+        )
 
     async def test_model_disabled_fails_visibly(self):
         run = await self.demo()
@@ -247,6 +258,8 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn(b'id="reviewed"', html)
         self.assertIn(b'id="severity-chips"', html)
         self.assertIn(b'id="category-chips"', html)
+        self.assertIn(b'id="mcp-live"', html)
+        self.assertIn(b"2026-07-28", js)
         self.assertIn(b"priorityFinding", js)
         self.assertIn(b"deterministic scope guard", js)
         self.assertNotIn(b"result.output_dir", js)

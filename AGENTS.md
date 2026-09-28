@@ -11,20 +11,17 @@ repository billing, visibility or protection settings without approval.
 
 Use synthetic data only. Do not commit imported records, databases, model weights,
 credentials, private session links or raw respondent logs. Python computes findings.
-The local model only classifies question scope; deterministic Python renders factual
-review text. Never let a model execute shell commands or save review decisions.
+Python decides question scope deterministically. The local model only classifies a non-critical review focus for in-scope questions; deterministic Python renders factual review text. Never let a model execute shell commands or save review decisions.
 
 Report exactly what ran. Core tests do not prove MCP execution. An MCP import or adapter
 is not a demonstrated HTTP integration. Mocked text is not local inference. Do not
 fabricate a lockfile, metrics, offline result or Windows test.
 
 Maintainer-supplied Windows evidence now verifies the core pathway:
-browser -> real MCP evidence -> local AI intent classification -> deterministic grounded
-explanation -> human-controlled review decision. Real qwen2.5:1.5b inference was observed
+browser -> deterministic scope guard -> real MCP evidence -> local AI review-focus classification -> deterministic grounded explanation -> human-controlled review decision. Real qwen2.5:1.5b inference was observed
 at 8.46 seconds for the demonstrated question.
 
-The maintainer-generated exact-version dependency snapshot is committed and the automated
-offline full-stack gate has passed with external probes unavailable. Do not overstate this
+The maintainer-generated exact-version dependency snapshot is committed. Offline and clean-install gates passed on an earlier branch head; because the router later changed, rerun both on the final head after the focus benchmark passes. Do not overstate this
 as manual browser-rendering-while-offline evidence unless a separate visual observation is
 recorded. Clean-install/package verification and broader intent/latency evaluation are the
 next evidence gates; do not mark them complete before maintainer execution. See

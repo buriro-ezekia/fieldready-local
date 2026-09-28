@@ -77,7 +77,7 @@ def main() -> int:
         "expected": "4",
         "status": "open",
     }
-    question = "Why was this finding raised, and what should the supervisor verify?"
+    question = "Why was this finding raised?"
 
     try:
         with ollama_service(ollama, args.port):
@@ -95,7 +95,7 @@ def main() -> int:
         "expected": "4",
         "finding_id": finding["finding_id"],
         "intent": "in_scope",
-        "focus": "combined",
+        "focus": "reason",
         "routing_source": "local_model_focus",
         "model_invoked": True,
     }

@@ -26,7 +26,7 @@ Before every screenshot:
 ### Must show
 
 - FieldReady Local branding;
-- Local-first / MCP-backed / Human-approved;
+- Local-first / live MCP protocol+tool-count badge / Human-approved;
 - 14 records;
 - 17 findings;
 - 13 affected records;

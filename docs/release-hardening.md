@@ -151,9 +151,7 @@ Run:
 & $py scripts/evaluate_intent.py --model "qwen2.5:1.5b" --repeats 2
 ```
 
-This executes 16 balanced synthetic cases twice (32 real classifications), writes
-`runtime/intent-eval.json`, and requires >=90% overall accuracy plus >=85% recall for
-both `in_scope` and `out_of_scope`. It also reports mean/median/p95 latency.
+This executes 16 balanced synthetic cases twice (32 production-router evaluations) and writes `runtime/intent-eval.json`. The deterministic scope/routing layer must achieve 100% accuracy and recall for both scope classes. All in-scope cases must invoke the local model, all out-of-scope cases must be guarded without inference, and the advisory five-way review-focus classifier must achieve at least 75% accuracy. Model-only and end-to-end latency distributions are reported separately.
 
 
 ## Cross-platform lock hashing

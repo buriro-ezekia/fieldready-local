@@ -18,6 +18,7 @@ REQUIRED_FILES = (
     "docs/devpost-submission.md",
     "docs/submission-assets.md",
     "docs/submission-requirements-map.md",
+    "docs/youtube-upload.md",
     "docs/m1-verification.md",
     "docs/rulesets.md",
 )

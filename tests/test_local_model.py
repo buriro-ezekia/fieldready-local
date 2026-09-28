@@ -3,7 +3,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-from fieldready.local_model import INTENT_FORMAT, LocalExplainer, grounded_text, safe_model_name, scope_guard
+from fieldready.local_model import FOCUS_FORMAT, LocalExplainer, grounded_text, safe_model_name, scope_guard
 from fieldready.mcp_client import MCPGateway
 
 
@@ -16,7 +16,7 @@ class ModelTests(unittest.TestCase):
         self.calls = []
         self.responses = [{"models": [{"name": "fixture:small", "digest": "fixture-digest"}]},
                           {"model_info": {"general.architecture": "fixture"}},
-                          {"done": True, "message": {"content": json.dumps({"intent": "in_scope"})}}]
+                          {"done": True, "message": {"content": json.dumps({"focus": "reason"})}}]
 
     def fake(self, method, path, body=None):
         self.calls.append((method, path, body))
@@ -30,13 +30,14 @@ class ModelTests(unittest.TestCase):
         result = self.execute()
         self.assertEqual(result["digest"], "fixture-digest")
         self.assertEqual(result["intent"], "in_scope")
+        self.assertEqual(result["focus"], "reason")
         self.assertEqual(result["rule_id"], "component_total")
         self.assertEqual(result["record_ordinal"], 2)
         self.assertTrue(result["model_invoked"])
-        self.assertEqual(result["routing_source"], "local_model")
+        self.assertEqual(result["routing_source"], "local_model_focus")
         request = self.calls[-1][2]
         self.assertFalse(request["stream"])
-        self.assertEqual(request["format"], INTENT_FORMAT)
+        self.assertEqual(request["format"], FOCUS_FORMAT)
         self.assertNotIn("tools", request)
         self.assertNotIn("DO_NOT_SEND", str(request))
         self.assertNotIn("component_total", str(request["messages"]))
@@ -47,7 +48,7 @@ class ModelTests(unittest.TestCase):
 
     def test_model_cannot_inject_prose_field(self):
         self.responses[2]["message"]["content"] = json.dumps({
-            "intent": "in_scope",
+            "focus": "reason",
             "explanation": "sampling bias caused this",
         })
         with self.assertRaises(RuntimeError):
@@ -56,6 +57,7 @@ class ModelTests(unittest.TestCase):
     def test_out_of_scope_gets_deterministic_decline_without_model(self):
         result = self.execute("Write a poem.")
         self.assertEqual(result["intent"], "out_of_scope")
+        self.assertIsNone(result["focus"])
         self.assertFalse(result["model_invoked"])
         self.assertEqual(result["routing_source"], "deterministic_scope_guard")
         self.assertEqual(self.calls, [])
@@ -71,7 +73,7 @@ class ModelTests(unittest.TestCase):
             "What should I compare in the source before recording an outcome?",
         ):
             with self.subTest(question=question):
-                self.assertIsNone(scope_guard(question))
+                self.assertEqual(scope_guard(question), "in_scope")
 
     def test_scope_guard_rejects_unrelated_and_override_requests(self):
         for question in (
@@ -170,8 +172,8 @@ class ModelTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             self.execute()
 
-    def test_unsupported_intent_rejected(self):
-        self.responses[2]["message"]["content"] = json.dumps({"intent": "maybe"})
+    def test_unsupported_focus_rejected(self):
+        self.responses[2]["message"]["content"] = json.dumps({"focus": "maybe"})
         with self.assertRaises(RuntimeError):
             self.execute()
 

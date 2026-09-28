@@ -115,27 +115,27 @@ The launcher starts its own `ollama serve` on 127.0.0.1:11435 with
 `OLLAMA_NO_CLOUD=1`. It does not reuse the normal Ollama server, download a model,
 or fall back to cloud inference.
 
-### Grounding boundary
+### Grounding and routing boundary
 
-The model does **not** generate factual review prose. It only classifies the supervisor's
-question as `in_scope` or `out_of_scope` using a constrained JSON schema. Python then
-renders the explanation from the verified finding fields. The model never receives a
-review-write tool, source CSV, record identifier, supervisor reason, shell, SQL or network
-tool.
+The model does **not** decide whether a question is allowed and does **not** generate factual
+review prose.
 
-For an in-scope question, the displayed explanation is assembled from the selected
-finding's rule identifier, record ordinal, field, observed value and expected value.
-For an out-of-scope question, Python returns a fixed scope message. This prevents model
-speculation from entering the factual review surface.
+Python first applies a deterministic scope guard. Clearly unrelated requests are rejected
+without model inference. Legitimate review questions are accepted deterministically and
+then sent to the local model only for a non-critical review-focus classification:
+`reason`, `verification`, `evidence`, `review_guidance`, or `combined`.
 
-The first real qwen2.5:1.5b run motivated this design: free-form model prose introduced
-unsupported statements about survey design, respondents, sampling bias and data-entry
-systems. The current architecture removes that failure class instead of trying to maintain
-an expanding keyword blacklist.
+Python renders the factual explanation from the selected finding's rule identifier, record
+ordinal, field, observed value and expected value. The model never receives a review-write
+tool, source CSV, record identifier, supervisor reason, shell, SQL or network tool.
 
-The UI reports the model name, timing, evidence reference and a notice that local AI
-classified the question while the factual wording came from verified evidence. Generation
-cannot write a decision.
+This design is based on measured failures: free-form model prose introduced unsupported
+claims, and later binary scope classifiers either accepted every unrelated question or
+rejected legitimate review questions. The final architecture therefore makes scope and
+facts deterministic while retaining local AI for advisory natural-language interpretation.
+
+The UI reports the model name, advisory focus, timing and evidence reference. Neither the
+scope guard nor the AI path can save a review decision.
 
 See [model evaluation](model-evaluation.md) for the real-inference acceptance gate.
 
@@ -148,4 +148,4 @@ Official references: [Ollama local-only configuration](https://docs.ollama.com/f
 No GitHub Actions workflow or run is introduced, and no paid deployment, hosted database,
 external inference API or billing change is required. This excludes existing hardware,
 electricity and connectivity. Apache-2.0 is preserved. Do not commit databases, tokens,
-real survey records or model weights. A tested dependency lockfile is still pending.
+real survey records or model weights. The tested Windows dependency snapshot is committed; final-head reruns remain part of release hardening.

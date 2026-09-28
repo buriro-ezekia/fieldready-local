@@ -1,168 +1,172 @@
 # Local model evaluation
 
-## Architecture after the first real-inference failure
+## Final production architecture
 
-FieldReady Local no longer allows the language model to write factual review prose.
+FieldReady Local does **not** allow the language model to decide access to the review
+workflow and does **not** allow it to write factual review prose.
 
-The local model performs one bounded task: classify the supervisor's natural-language
-question as either `in_scope` or `out_of_scope`. Python then assembles every factual
-statement from the deterministic finding evidence already returned by the validation layer.
+The production sequence is:
 
-This separation is deliberate:
+1. Python applies a deterministic scope guard.
+2. Clearly unrelated requests are returned as `out_of_scope` without model inference.
+3. Legitimate review questions are accepted deterministically as `in_scope`.
+4. Only accepted review questions reach `qwen2.5:1.5b`.
+5. The local model classifies a non-critical review focus:
+   `reason`, `verification`, `evidence`, `review_guidance`, or `combined`.
+6. Python renders the factual explanation from verified finding evidence.
+7. The model has no review-write tool and cannot change source data or supervisor decisions.
 
-- Python owns rule identifiers, record ordinals, observed values and expected values.
-- The model never receives tools and cannot save a review decision.
-- The model cannot add free-form factual claims to the displayed explanation.
-- The browser labels the result as AI-assisted question interpretation plus grounded evidence.
-- A failed or unavailable model produces no substitute cloud response.
+This architecture separates three concerns:
 
-The first real model target remains `qwen2.5:1.5b`, previously used locally by the
-maintainer. This is a test target, not a commitment to the final release.
+- **scope/safety**: deterministic Python;
+- **natural-language interpretation**: local model, advisory only;
+- **facts/actions**: deterministic Python plus explicit human confirmation.
 
-## Real local-inference gate
+No cloud fallback is permitted.
 
-Run from the repository root:
+## Why the architecture changed
+
+Three stages of evidence led to the current design.
+
+### Free-form factual model output
+
+The first real `qwen2.5:1.5b` explanation completed locally but introduced unsupported
+claims about survey design, respondents, sampling bias and data-entry systems.
+
+Response: remove factual prose generation from the model entirely.
+
+### Raw binary scope classifier
+
+The first broader benchmark used the model to classify `in_scope` versus
+`out_of_scope` directly:
+
+- 32 evaluations;
+- 16 correct;
+- accuracy **0.50**;
+- in-scope recall **1.00**;
+- out-of-scope recall **0.00**;
+- the model predicted `in_scope` for every question.
+
+Response: add a deterministic scope guard before inference.
+
+### First hybrid router
+
+The next benchmark routed all 32 cases correctly to either the guard or the model, but
+still allowed the model to make the final in-scope/out-of-scope decision for review-related
+questions:
+
+- 32 evaluations;
+- 26 correct;
+- accuracy **0.8125**;
+- in-scope recall **0.625**;
+- out-of-scope recall **1.00**;
+- deterministic routing accuracy **1.00**;
+- 16 model invocations and 16 guarded requests;
+- six legitimate review queries were denied by the model;
+- model latency mean **1.856 s**, median **1.39 s**, p95 **7.95 s**.
+
+Response: remove scope authority from the model entirely.
+
+## Single real-model smoke check
+
+Run:
 
 ```powershell
 $py = ".\.venv\Scripts\python.exe"
 & $py scripts/check_model.py --model "qwen2.5:1.5b"
 ```
 
-The check:
+The smoke check uses an unambiguous review question:
 
-- requires an already installed Ollama executable and exact model name;
-- launches a dedicated loopback Ollama service on port 11435;
-- sets `OLLAMA_NO_CLOUD=1`;
-- performs one real structured intent classification;
-- does not download a model;
-- does not provide tools to the model;
-- does not alter SQLite or a review decision;
-- validates the deterministic evidence references returned with the grounded result;
-- fails rather than falling back to a hosted model.
+> Why was this finding raised?
+
+Expected production behaviour:
+
+- deterministic scope: `in_scope`;
+- local model focus: `reason`;
+- grounded evidence: `component_total`, record ordinal 2, observed 5, expected 4;
+- no decision write;
+- no cloud fallback.
 
 A successful run ends with:
 
 ```text
-LOCAL MODEL + GROUNDED EXPLANATION: PASS (broader intent quality is not yet evaluated)
+LOCAL MODEL FOCUS + GROUNDED EXPLANATION: PASS
 ```
 
-For the fixture question, the model should classify the request as `in_scope`. The displayed
-text must then be assembled from the known finding:
+## Final broader benchmark
 
-- rule: `component_total`;
-- record ordinal: 2;
-- field: `household_size`;
-- observed: 5;
-- expected: 4.
+The benchmark dataset contains 16 synthetic questions:
 
-This gate establishes real local inference plus deterministic evidence rendering. It does not
-establish general intent-classification quality across arbitrary questions.
+- 8 legitimate review questions;
+- 8 clearly unrelated questions.
 
-## Browser test after the gate
-
-After a successful check:
-
-```powershell
-& $py scripts/run_web.py --model "qwen2.5:1.5b"
-```
-
-Create or reopen a synthetic review, select the component-total finding and ask:
-
-> Why was this finding raised, and what should I verify before confirming it?
-
-The result should state that `household_size` is recorded as 5 while the validated component
-total is 4, and direct the supervisor to verify the source component values before deciding.
-The model itself does not author those factual statements.
-
-For an unrelated question, the model may classify it as `out_of_scope`; Python then returns
-a fixed scope message instead of answering the unrelated request.
-
-## Why the architecture changed
-
-The first real `qwen2.5:1.5b` run completed locally but produced unsupported prose about
-survey design, respondents, sampling bias and data-entry systems. Rejecting particular words
-would remain brittle. Constraining the model to an intent enum removes that entire class of
-failure from the factual review surface.
-
-## If the check fails
-
-Do not download another model automatically and do not enable a cloud endpoint. Preserve the
-complete terminal error. The next action depends on whether the failure is model discovery,
-Ollama startup, structured intent classification or local runtime behaviour.
-
-A later evaluation should test intent accuracy, latency and memory use across a broader set
-of representative supervisor questions.
-
-
-## Broader intent and latency benchmark
-
-The branch now includes a balanced synthetic benchmark at `evaluations/intent_cases.json`:
-8 in-scope and 8 out-of-scope questions.
+Each in-scope case also has an expected advisory focus label.
 
 Run:
 
 ```powershell
-$py = ".\\.venv\\Scripts\\python.exe"
+$py = ".\.venv\Scripts\python.exe"
 & $py scripts/evaluate_intent.py --model "qwen2.5:1.5b" --repeats 2
 ```
 
-This performs **32 real local classifications** by default and writes
-`runtime/intent-eval.json`.
+This produces 32 production-router evaluations and writes:
 
-The acceptance gate is:
+```text
+runtime\intent-eval.json
+```
 
-- no runtime/schema errors;
-- overall accuracy >= 0.90;
-- in-scope recall >= 0.85;
-- out-of-scope recall >= 0.85.
+### Hard acceptance criteria
 
-Latency is reported as mean, median, p95, minimum and maximum. There is no hard latency
-threshold yet because the result is hardware-specific; the measured distribution will be
-used to decide whether the current model is acceptable for the hackathon demo.
+The final router must satisfy all of the following:
 
-The benchmark also verifies that every in-scope result still produces the deterministic
-grounded text and that the evidence reference remains unchanged.
+- runtime/schema errors: **0**;
+- deterministic scope accuracy: **100%**;
+- in-scope recall: **100%**;
+- out-of-scope recall: **100%**;
+- expected routing accuracy: **100%**;
+- model invocations: exactly all in-scope evaluations;
+- guarded requests: exactly all out-of-scope evaluations.
 
+These criteria are strict because scope is no longer probabilistic.
 
-## First broader benchmark result and redesign
+### Advisory AI-focus criterion
 
-The first 16-case × 2-repeat benchmark of the **raw binary local-model classifier** failed
-its acceptance threshold:
+The local model's five-way focus accuracy must be at least **75%** on in-scope
+evaluations.
 
-- evaluations: 32;
-- correct: 16;
-- accuracy: **0.50**;
-- in-scope recall: **1.00**;
-- out-of-scope recall: **0.00**;
-- confusion: 16 in_scope->in_scope and 16 out_of_scope->in_scope;
-- mean model latency: **1.824 s**;
-- median: **1.54 s**;
-- p95: **1.88 s**;
-- minimum: **1.14 s**;
-- maximum: **11.16 s**.
+A wrong focus cannot deny the question, change evidence, alter the rendered factual text,
+or save a decision. The focus metric therefore measures usefulness rather than safety.
 
-The model therefore behaved like an always-in-scope classifier on this test set. This is
-not accepted as production behaviour.
+### Latency reporting
 
-### Hybrid production router
+The benchmark reports separately:
 
-The production path now places a deterministic scope guard before local inference:
+- model-only latency for in-scope questions;
+- end-to-end latency for all requests;
+- mean, median, p95, minimum and maximum values.
 
-1. clearly unrelated or task-abandoning requests are rejected before the model;
-2. review-related questions are allowed through to qwen2.5:1.5b;
-3. the model still performs the bounded in-scope/out-of-scope classification for those
-   review-related questions;
-4. Python remains solely responsible for factual explanation text.
+Out-of-scope requests should be near-instant because the model is not invoked.
 
-The guard is intentionally narrow. It recognises validation/review vocabulary and a small
-set of context-shortcuts such as "Why?" and "What should I verify?". Explicit attempts to
-abandon the selected review task override positive markers.
+There is no fixed latency pass threshold yet; the measured distribution will inform the
+final demo decision.
 
-All 16 benchmark cases are now encoded as regression expectations for the deterministic
-gate: all 8 unrelated cases must be rejected before inference and all 8 review-related cases
-must still reach the local model.
+## Browser behaviour
 
-The benchmark script now measures the **combined production router**, reports how many
-requests were handled by the deterministic guard versus the local model, and separates
-model latency from end-to-end latency. A rerun is required before this redesign is counted
-as passed.
+For an accepted review question, the browser shows:
+
+- the deterministic grounded explanation;
+- the local model name;
+- the advisory focus when available;
+- model latency;
+- the evidence reference;
+- a notice that scope and factual content are not model-controlled.
+
+For an unrelated question, the deterministic guard returns the fixed out-of-scope response
+without model inference.
+
+## Evidence boundary
+
+Passing the final benchmark certifies the scope/focus router only. Because production code
+changed after earlier clean-install and offline passes, both gates must be rerun once more
+on the final branch head before submission evidence is frozen.

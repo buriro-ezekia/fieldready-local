@@ -71,6 +71,7 @@ class WebApp:
 
         try:
             if path == "/api/info" and method == "GET":
+                mcp_health = await self.gateway.ping()
                 with self.store.connection() as db:
                     runs = [dict(row) for row in db.execute(
                         """SELECT r.id,r.created_at,b.ruleset_id
@@ -81,6 +82,7 @@ class WebApp:
                     "runs": runs,
                     "rulesets": list_rulesets(),
                     "model": self.explainer.model if self.explainer else None,
+                    "mcp": mcp_health,
                     "notice": "Synthetic data only. No live Alexa+ integration.",
                 }
 

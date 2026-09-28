@@ -98,7 +98,8 @@ Use:
 - [the under-three-minute recording script](docs/demo-script.md) for the video;
 - [the visual capture plan](docs/submission-assets.md) for screenshots;
 - [the field-by-field Devpost package](docs/devpost-submission.md) for submission text;
-- [the requirements-to-evidence map](docs/submission-requirements-map.md) for final coverage.
+- [the requirements-to-evidence map](docs/submission-requirements-map.md) for final coverage;
+- [the YouTube upload package](docs/youtube-upload.md) for title, description and upload checks.
 
 Before submitting, run the repository audit:
 

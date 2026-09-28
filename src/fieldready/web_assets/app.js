@@ -1,5 +1,7 @@
 "use strict";
+
 const $ = id => document.getElementById(id);
+
 let token = sessionStorage.getItem("fieldready-token") || "";
 const fragment = new URLSearchParams(location.hash.slice(1));
 if (fragment.has("token")) {
@@ -8,7 +10,13 @@ if (fragment.has("token")) {
   history.replaceState(null, "", location.pathname);
 }
 
-let run = "", offset = 0, nextOffset = null, selected = null, hasModel = false, busy = false;
+let run = "";
+let offset = 0;
+let nextOffset = null;
+let selected = null;
+let hasModel = false;
+let busy = false;
+let currentItems = [];
 
 function message(text, error = false) {
   $("message").textContent = text;
@@ -31,9 +39,56 @@ async function api(path, body) {
 async function perform(task) {
   if (busy) return;
   busy = true;
-  try { await task(); }
-  catch (error) { message(error.message, true); }
-  finally { busy = false; }
+  try {
+    await task();
+  } catch (error) {
+    message(error.message, true);
+  } finally {
+    busy = false;
+  }
+}
+
+function chip(label, value, className = "") {
+  const span = document.createElement("span");
+  span.className = "chip" + (className ? " " + className : "");
+  span.textContent = label + " " + value;
+  return span;
+}
+
+function renderSnapshot(summary) {
+  if (!summary) {
+    $("reviewed").textContent = "—";
+    $("review-progress-label").textContent = "No review selected";
+    $("review-progress").style.width = "0%";
+    $("severity-chips").replaceChildren(chip("No review selected", "", "muted"));
+    $("category-chips").replaceChildren(chip("No review selected", "", "muted"));
+    return;
+  }
+
+  const total = Number(summary.finding_count || 0);
+  const unresolved = Number(summary.unresolved_findings || 0);
+  const reviewed = Math.max(0, total - unresolved);
+  const percent = total ? Math.round((reviewed / total) * 100) : 0;
+
+  $("reviewed").textContent = reviewed + "/" + total;
+  $("review-progress-label").textContent = percent + "% resolved";
+  $("review-progress").style.width = percent + "%";
+
+  const severity = summary.severity_counts || {};
+  const severityNodes = ["critical", "high", "medium", "low"]
+    .filter(key => Number(severity[key] || 0) > 0)
+    .map(key => chip(key, severity[key], key));
+  $("severity-chips").replaceChildren(
+    ...(severityNodes.length ? severityNodes : [chip("No findings", "", "muted")])
+  );
+
+  const categories = Object.entries(summary.category_counts || {})
+    .sort((a, b) => Number(b[1]) - Number(a[1]) || a[0].localeCompare(b[0]))
+    .slice(0, 6)
+    .map(([key, value]) => chip(key.replaceAll("_", " "), value));
+  $("category-chips").replaceChildren(
+    ...(categories.length ? categories : [chip("No categories", "", "muted")])
+  );
 }
 
 function clearSelection() {
@@ -51,18 +106,22 @@ function selectFinding(item) {
   if (busy) return;
   clearSelection();
   selected = item;
-  $("selection").textContent = "Record ordinal " + item.row_number + " · revision " + item.revision;
+  $("selection").textContent =
+    "Record ordinal " + item.row_number +
+    " · " + (item.severity || "unrated") +
+    " severity · revision " + item.revision;
+
   const labels = {
-    record_id:"Record ID",
-    rule_id:"Rule",
-    category:"Category",
-    severity:"Severity",
-    field:"Field",
-    observed:"Observed",
-    expected:"Expected",
-    status:"Status",
-    message:"Why flagged",
-    verification:"What to verify"
+    record_id: "Record ID",
+    rule_id: "Rule",
+    category: "Category",
+    severity: "Severity",
+    field: "Field",
+    observed: "Observed",
+    expected: "Expected",
+    status: "Status",
+    message: "Why flagged",
+    verification: "What to verify"
   };
   for (const [key, label] of Object.entries(labels)) {
     if (!(key in item)) continue;
@@ -72,11 +131,28 @@ function selectFinding(item) {
     dd.textContent = String(item[key] ?? "") || "(missing)";
     $("evidence").append(dt, dd);
   }
+
   $("review-controls").disabled = false;
   $("ask").disabled = !hasModel;
   document.querySelectorAll("#rows tr").forEach(
     row => row.classList.toggle("selected", row.dataset.id === item.finding_id)
   );
+}
+
+function priorityFinding(items) {
+  const rank = {critical: 0, high: 1, medium: 2, low: 3};
+  return items
+    .filter(item => item.status === "open" || item.status === "follow_up")
+    .slice()
+    .sort((a, b) =>
+      (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9) ||
+      Number(a.row_number) - Number(b.row_number) ||
+      String(a.rule_id).localeCompare(String(b.rule_id))
+    )[0] || null;
+}
+
+function updatePriorityButton() {
+  $("review-next").disabled = !priorityFinding(currentItems);
 }
 
 async function info() {
@@ -85,8 +161,7 @@ async function info() {
   const currentRuleset = $("import-ruleset").value;
   $("import-ruleset").replaceChildren();
   for (const item of data.rulesets) {
-    const label = item.title + " · " + item.id;
-    $("import-ruleset").add(new Option(label, item.id));
+    $("import-ruleset").add(new Option(item.title + " · " + item.id, item.id));
   }
   if ([...$("import-ruleset").options].some(option => option.value === currentRuleset)) {
     $("import-ruleset").value = currentRuleset;
@@ -94,14 +169,23 @@ async function info() {
 
   $("runs").replaceChildren(new Option("Choose a review", ""));
   for (const item of data.runs) {
-    const stamp = item.created_at.slice(0,19).replace("T"," ");
-    $("runs").add(new Option(stamp + " UTC · " + item.ruleset_id + " · " + item.id.slice(0,8), item.id));
+    const stamp = item.created_at.slice(0, 19).replace("T", " ");
+    $("runs").add(
+      new Option(stamp + " UTC · " + item.ruleset_id + " · " + item.id.slice(0, 8), item.id)
+    );
   }
   $("runs").value = run;
 
+  const mcp = data.mcp || {};
+  const tools = Array.isArray(mcp.tools) ? mcp.tools : [];
+  $("mcp-live").textContent = mcp.protocol
+    ? "MCP " + mcp.protocol + " · " + tools.length + " tools"
+    : "MCP unavailable";
+
   hasModel = !!data.model;
   $("model-status").textContent = hasModel
-    ? "Configured local model: " + data.model + ". Scope remains deterministic; AI focus is advisory."
+    ? "Configured local model: " + data.model +
+      ". Scope remains deterministic; AI focus is advisory."
     : "AI disabled. Validation, review and export remain available.";
 }
 
@@ -110,13 +194,18 @@ async function load() {
   $("export").disabled = !run;
 
   if (!run) {
-    for (const id of ["records","findings","affected","unresolved"]) $(id).textContent = "—";
+    currentItems = [];
+    for (const id of ["records", "findings", "affected", "unresolved"]) {
+      $(id).textContent = "—";
+    }
     $("rows").replaceChildren();
     $("page-label").textContent = "No review selected";
     $("coverage").textContent = "Create a synthetic review or reopen a saved run.";
     nextOffset = null;
     $("previous").disabled = true;
     $("next").disabled = true;
+    renderSnapshot(null);
+    updatePriorityButton();
     return;
   }
 
@@ -125,18 +214,27 @@ async function load() {
     status: $("filter").value || null,
     offset
   });
-  const s = data.summary, page = data.page;
+  const s = data.summary;
+  const page = data.page;
+  currentItems = page.items.slice();
 
-  for (const [id,key] of Object.entries({
-    records:"row_count", findings:"finding_count", affected:"affected_rows", unresolved:"unresolved_findings"
-  })) $(id).textContent = s[key];
+  for (const [id, key] of Object.entries({
+    records: "row_count",
+    findings: "finding_count",
+    affected: "affected_rows",
+    unresolved: "unresolved_findings"
+  })) {
+    $(id).textContent = s[key];
+  }
+
+  renderSnapshot(s);
 
   const checks = s.check_evaluations || {
     evaluable: s.total_checks_evaluable || 0,
     not_evaluable: (s.total_checks_not_evaluable || []).length
   };
   const severity = s.severity_counts || {};
-  const severityText = ["critical","high","medium","low"]
+  const severityText = ["critical", "high", "medium", "low"]
     .filter(key => severity[key])
     .map(key => key + " " + severity[key])
     .join(", ") || "none";
@@ -144,7 +242,8 @@ async function load() {
   $("coverage").textContent =
     "Ruleset: " + (s.ruleset_title || s.ruleset) +
     " · version " + (s.ruleset_version || "—") +
-    " · rule evaluations: " + checks.evaluable + " evaluable / " + checks.not_evaluable + " not evaluable" +
+    " · rule evaluations: " + checks.evaluable + " evaluable / " +
+    checks.not_evaluable + " not evaluable" +
     " · severity: " + severityText +
     " · run: " + run;
 
@@ -152,11 +251,13 @@ async function load() {
   for (const item of page.items) {
     const tr = document.createElement("tr");
     tr.dataset.id = item.finding_id;
-    for (const key of ["row_number","record_id","rule_id","severity","status"]) {
+
+    for (const key of ["row_number", "record_id", "rule_id", "severity", "status"]) {
       const td = document.createElement("td");
       td.textContent = String(item[key] ?? "") || "(missing)";
       tr.append(td);
     }
+
     const td = document.createElement("td");
     const button = document.createElement("button");
     button.textContent = "Review";
@@ -171,8 +272,11 @@ async function load() {
   $("previous").disabled = offset === 0;
   $("next").disabled = nextOffset === null;
   $("page-label").textContent = page.total_matching
-    ? (offset + 1) + "–" + (offset + page.items.length) + " of " + page.total_matching + " findings"
+    ? (offset + 1) + "–" + (offset + page.items.length) +
+      " of " + page.total_matching + " findings"
     : "No findings match this filter";
+
+  updatePriorityButton();
   message("Review loaded through MCP. Counts reflect stored evidence; source records are unchanged.");
 }
 
@@ -188,10 +292,22 @@ async function startDemo(path) {
 $("demo").onclick = () => perform(async () => startDemo("/api/demo"));
 $("demo-field").onclick = () => perform(async () => startDemo("/api/demo-field"));
 
+$("review-next").onclick = () => {
+  const item = priorityFinding(currentItems);
+  if (item) {
+    selectFinding(item);
+    message(
+      "Highest-priority unresolved finding selected: " +
+      (item.severity || "unrated") + " · " + item.rule_id + "."
+    );
+  }
+};
+
 $("csv").onchange = () => perform(async () => {
   const file = $("csv").files[0];
   if (!file) return;
   if (file.size > 1048576) throw new Error("CSV must not exceed 1 MiB.");
+
   const data = await api("/api/import", {
     csv: await file.text(),
     ruleset_id: $("import-ruleset").value,
@@ -219,7 +335,10 @@ $("refresh").onclick = () => perform(async () => {
 $("export").onclick = () => perform(async () => {
   if (!run) throw new Error("Select a review before exporting.");
   const result = await api("/api/export", {run_id: run});
-  message("Review package exported locally: " + result.output_dir + ". Raw source CSV was not included.");
+  message(
+    "Review package exported locally under exports/" + run +
+    "/. Raw source CSV was not included."
+  );
 });
 
 $("filter").onchange = () => perform(async () => {
@@ -249,6 +368,7 @@ $("review-form").onsubmit = event => {
     if (!selected || !$("confirm").checked) {
       throw new Error("Select a finding and explicitly confirm the decision.");
     }
+
     const body = {
       finding_id: selected.finding_id,
       status: $("status").value,
@@ -269,9 +389,12 @@ $("ask-form").onsubmit = event => {
     if (!selected || !hasModel) {
       throw new Error("Select a finding and enable an installed local model first.");
     }
+
     const id = selected.finding_id;
     $("ask").disabled = true;
-    $("answer").textContent = "Running local inference… No review decision will be saved.";
+    $("answer").textContent =
+      "Running local inference… No review decision will be saved.";
+
     try {
       const result = await api("/api/explain", {
         run_id: run,
@@ -284,9 +407,12 @@ $("ask-form").onsubmit = event => {
         "\nModel: " + result.model + focus +
         " · " + result.elapsed_seconds + " s" +
         " · Evidence: " + result.finding_id + " / " + result.rule_id;
-      message(result.routing_source === "deterministic_scope_guard"
-        ? "The deterministic scope guard rejected an unrelated question before model inference."
-        : "Scope was accepted deterministically; local AI classified the review focus and Python rendered the evidence-grounded explanation.");
+
+      message(
+        result.routing_source === "deterministic_scope_guard"
+          ? "The deterministic scope guard rejected an unrelated question before model inference."
+          : "Scope was accepted deterministically; local AI classified the review focus and Python rendered the evidence-grounded explanation."
+      );
     } catch (error) {
       $("answer").textContent = "No explanation produced. " + error.message;
       throw error;
@@ -298,5 +424,6 @@ $("ask-form").onsubmit = event => {
 
 perform(async () => {
   await info();
-  message("Local workspace ready. Start the richer field-survey demo or reopen a saved review.");
+  renderSnapshot(null);
+  message("Local workspace ready. Start the field-survey demo for the full review workflow.");
 });

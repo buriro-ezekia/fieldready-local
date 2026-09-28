@@ -5,11 +5,15 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fieldready-local"
 version = "0.1.0"
-description = "Local, evidence-backed survey review — early hackathon prototype"
+description = "Local-first, evidence-backed survey quality review with MCP, bounded AI, and human approval"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 dependencies = []
+
+[project.urls]
+Repository = "https://github.com/buriro-ezekia/fieldready-local"
+Demo = "https://youtu.be/DfNdp4d5lhs"
 
 [project.optional-dependencies]
 mcp = ["mcp>=2,<3", "uvicorn>=0.30,<1", "httpx2"]

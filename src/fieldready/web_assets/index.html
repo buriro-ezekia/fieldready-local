@@ -1,9 +1,33 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>FieldReady Local | Survey review</title><link rel="stylesheet" href="/app.css"><script src="/app.js" defer></script></head>
-<body><header><div><span class="eyebrow">FIELD OPERATIONS / LOCAL WORKSPACE</span><h1>FieldReady <span>Local</span></h1></div><span class="pill">Synthetic-data prototype</span></header>
-<main><section class="intro"><div><h2>From findings to follow-up.</h2><p>Inspect evidence, record decisions, and export a supervisor-ready review package without changing the source data.</p></div><p class="fine">Simulated Alexa+ experience<br>No live Alexa+ connection or certification</p></section>
+<body>
+<header>
+  <div><span class="eyebrow">FIELD OPERATIONS / LOCAL WORKSPACE</span><h1>FieldReady <span>Local</span></h1></div>
+  <div class="trust-row" aria-label="Product boundaries">
+    <span class="trust">Local-first</span><span class="trust" id="mcp-live">MCP checking…</span><span class="trust">Human-approved</span>
+  </div>
+</header>
+<main>
+<section class="intro">
+  <div>
+    <span class="eyebrow dark">SURVEY QUALITY REVIEW</span>
+    <h2>Catch field-data problems before they travel downstream.</h2>
+    <p>Validate a batch locally, inspect the evidence, keep supervisors in control, and export an audit-ready review package without changing the source data.</p>
+  </div>
+  <p class="fine product-note">Simulated Alexa+ experience<br>Real local MCP backend<br>No live Alexa+ connection or certification</p>
+</section>
+
 <div id="message" role="status" aria-live="polite">Connecting to your local workspace…</div>
+
+<section class="demo-guide" aria-label="Suggested demonstration path">
+  <div>
+    <span class="eyebrow dark">2-MINUTE DEMO PATH</span>
+    <p><strong>1.</strong> Start the field-survey demo &nbsp;→&nbsp; <strong>2.</strong> Review the highest-priority finding &nbsp;→&nbsp; <strong>3.</strong> Ask the local assistant &nbsp;→&nbsp; <strong>4.</strong> Confirm a decision &nbsp;→&nbsp; <strong>5.</strong> Export the review package.</p>
+  </div>
+  <button id="review-next" class="secondary" disabled>Review next priority</button>
+</section>
+
 <section class="toolbar" aria-label="Batch controls">
 <button id="demo">Household demo</button>
 <button id="demo-field">Field-survey demo</button>
@@ -13,9 +37,62 @@
 <button id="export" class="secondary" disabled>Export review package</button>
 <button id="refresh" class="secondary">Refresh</button>
 </section>
-<section class="metrics" aria-label="Verified summary"><article><span>Records</span><strong id="records">—</strong></article><article><span>Findings</span><strong id="findings">—</strong></article><article><span>Affected records</span><strong id="affected">—</strong></article><article><span>Unresolved findings</span><strong id="unresolved">—</strong></article></section>
+
+<section class="metrics" aria-label="Verified summary">
+  <article><span>Records</span><strong id="records">—</strong><small>Validated locally</small></article>
+  <article><span>Findings</span><strong id="findings">—</strong><small>Evidence-backed issues</small></article>
+  <article><span>Affected records</span><strong id="affected">—</strong><small>Unique records needing attention</small></article>
+  <article><span>Unresolved findings</span><strong id="unresolved">—</strong><small>Open or follow-up</small></article>
+</section>
+
+<section class="snapshot" aria-label="Supervisor snapshot">
+  <article>
+    <span class="snapshot-label">Review progress</span>
+    <div class="progress-line"><strong id="reviewed">—</strong><span id="review-progress-label">No review selected</span></div>
+    <div class="progress-track" aria-hidden="true"><span id="review-progress"></span></div>
+  </article>
+  <article>
+    <span class="snapshot-label">Severity</span>
+    <div id="severity-chips" class="chips"><span class="chip muted">No review selected</span></div>
+  </article>
+  <article>
+    <span class="snapshot-label">Issue categories</span>
+    <div id="category-chips" class="chips"><span class="chip muted">No review selected</span></div>
+  </article>
+</section>
+
 <p id="coverage" class="fine">Create a synthetic review or reopen a saved run. Numbers come from Python through MCP.</p>
-<div class="workspace"><section class="panel queue"><div class="panel-head"><h2>Review queue</h2><label>Status<select id="filter"><option value="">All statuses</option><option value="open">Open</option><option value="follow_up">Follow-up</option><option value="confirmed">Confirmed</option><option value="dismissed">Dismissed</option></select></label></div><div class="table-wrap"><table><thead><tr><th>Record ordinal</th><th>Record ID</th><th>Rule</th><th>Severity</th><th>Status</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table></div><div class="pager"><button id="previous" class="secondary">Previous</button><span id="page-label">No review selected</span><button id="next" class="secondary">Next</button></div></section>
-<aside class="panel"><h2>Evidence &amp; decision</h2><p id="selection">Select a finding to inspect its evidence.</p><dl id="evidence"></dl><form id="review-form"><fieldset id="review-controls" disabled><label>Review outcome<select id="status"><option value="confirmed">Confirmed</option><option value="follow_up">Follow-up</option><option value="dismissed">Dismissed</option><option value="open">Reopen</option></select></label><label>Reason<textarea id="reason" maxlength="500" required rows="3" placeholder="State what you checked and why."></textarea></label><label class="check"><input id="confirm" type="checkbox" required>I approve this exact review decision.</label><p class="fine">Confirmed means reviewed, not corrected. The source CSV is never edited.</p><button type="submit">Save confirmed decision</button></fieldset></form></aside></div>
-<section class="panel assistant"><div><span class="eyebrow">LOCAL EXPLANATION ASSISTANT</span><h2>Understand the selected finding</h2><p id="model-status">AI status not checked.</p><p class="fine">Python decides scope and renders factual evidence. The local model only classifies review focus and cannot save decisions or edit records.</p></div><form id="ask-form"><label>Your question<textarea id="question" rows="2" maxlength="600" required>Why is this record flagged, and what should I verify?</textarea></label><button id="ask" type="submit" disabled>Explain with local model</button></form><div id="answer" role="status" aria-live="polite"></div></section>
-<footer>All review state and exported packages stay local. This prototype is not a production data-collection system.</footer></main></body></html>
+
+<div class="workspace">
+<section class="panel queue">
+  <div class="panel-head"><div><span class="eyebrow dark">SUPERVISOR QUEUE</span><h2>Review findings</h2></div><label>Status<select id="filter"><option value="">All statuses</option><option value="open">Open</option><option value="follow_up">Follow-up</option><option value="confirmed">Confirmed</option><option value="dismissed">Dismissed</option></select></label></div>
+  <div class="table-wrap"><table><thead><tr><th>Record ordinal</th><th>Record ID</th><th>Rule</th><th>Severity</th><th>Status</th><th>Action</th></tr></thead><tbody id="rows"></tbody></table></div>
+  <div class="pager"><button id="previous" class="secondary">Previous</button><span id="page-label">No review selected</span><button id="next" class="secondary">Next</button></div>
+</section>
+
+<aside class="panel">
+  <span class="eyebrow dark">HUMAN DECISION</span><h2>Evidence &amp; decision</h2>
+  <p id="selection">Select a finding to inspect its evidence.</p><dl id="evidence"></dl>
+  <form id="review-form"><fieldset id="review-controls" disabled>
+    <label>Review outcome<select id="status"><option value="confirmed">Confirmed</option><option value="follow_up">Follow-up</option><option value="dismissed">Dismissed</option><option value="open">Reopen</option></select></label>
+    <label>Reason<textarea id="reason" maxlength="500" required rows="3" placeholder="State what you checked and why."></textarea></label>
+    <label class="check"><input id="confirm" type="checkbox" required>I approve this exact review decision.</label>
+    <p class="fine">Confirmed means reviewed, not corrected. The source CSV is never edited.</p>
+    <button type="submit">Save confirmed decision</button>
+  </fieldset></form>
+</aside>
+</div>
+
+<section class="panel assistant">
+  <div>
+    <span class="eyebrow dark">LOCAL EXPLANATION ASSISTANT</span>
+    <h2>Understand the selected finding</h2>
+    <p id="model-status">AI status not checked.</p>
+    <p class="fine">Python decides scope and renders factual evidence. The local model only classifies review focus and cannot save decisions or edit records.</p>
+  </div>
+  <form id="ask-form"><label>Your question<textarea id="question" rows="2" maxlength="600" required>Why is this record flagged, and what should I verify?</textarea></label><button id="ask" type="submit" disabled>Explain with local model</button></form>
+  <div id="answer" role="status" aria-live="polite"></div>
+</section>
+
+<footer>Local SQLite · local MCP · optional local Ollama · explicit human review · raw source excluded from exports</footer>
+</main></body></html>

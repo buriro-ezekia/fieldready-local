@@ -1,5 +1,10 @@
 # Verification record — 27 September 2026
 
+> **Historical M0 evidence.** This file preserves the earlier foundation/release-hardening
+> record. For the current richer hackathon submission evidence (115 tests, versioned
+> field-survey rules, real MCP/web/export/restart integration and browser observation), see
+> [M1 verification](m1-verification.md).
+
 ## Current Windows evidence supplied by the maintainer
 
 The following checks were executed on the maintainer's Windows environment against the

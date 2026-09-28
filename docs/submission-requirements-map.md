@@ -116,22 +116,16 @@ It describes:
 
 ### Mini challenge
 
-Human confirmation remains required.
+**None.**
 
-The public Apache-2.0 repository may make **Open Source** relevant, but do not enter or claim
-that mini challenge until the maintainer explicitly confirms the choice and completes its
-extra submission fields.
-
-Do not claim AWS Builder for the demonstrated local-first stack.
+The maintainer confirmed that FieldReady Local will enter the Alexa+ primary track only.
+The submission does not claim Open Source or AWS Builder mini challenges.
 
 ## Pre-existing work disclosure
 
-The exact disclosure is intentionally unresolved because it must be factual rather than
-inferred from Git history.
-
-Use the two truthful-answer templates in:
-
-- `docs/devpost-submission.md#pre-existing-work-disclosure`
+The maintainer confirmed the disclosure in `docs/devpost-submission.md`: FieldReady Local
+was created during the hackathon window; only basic repository scaffolding/documentation
+preceded the working implementation.
 
 ## Optional feature requests
 
@@ -175,7 +169,8 @@ How well the project is built and how effectively it uses the required technolog
 
 Best video moment:
 
-> Brief MCP-ready terminal proof, followed immediately by the browser workflow.
+> Show the live MCP protocol/tool-count badge in the browser header, then start the
+> field-survey workflow. A terminal shot is optional rather than required.
 
 ## Design
 

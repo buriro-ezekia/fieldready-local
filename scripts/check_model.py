@@ -95,6 +95,9 @@ def main() -> int:
         "expected": "4",
         "finding_id": finding["finding_id"],
         "intent": "in_scope",
+        "focus": "combined",
+        "routing_source": "local_model_focus",
+        "model_invoked": True,
     }
     changed = {key: (expected[key], result.get(key)) for key in expected if result.get(key) != expected[key]}
     if changed:
@@ -105,10 +108,11 @@ def main() -> int:
     print("LOCAL MODEL:", result["model"])
     print("MODEL DIGEST:", result.get("digest"))
     print("ELAPSED SECONDS:", result["elapsed_seconds"])
-    print("LOCAL MODEL INTENT:", result["intent"])
+    print("DETERMINISTIC SCOPE:", result["intent"])
+    print("LOCAL MODEL FOCUS:", result["focus"])
     print("GROUNDED OUTPUT:")
     print(result["text"])
-    print("LOCAL MODEL + GROUNDED EXPLANATION: PASS (broader intent quality is not yet evaluated)")
+    print("LOCAL MODEL FOCUS + GROUNDED EXPLANATION: PASS (broader focus quality is evaluated separately)")
     return 0
 
 

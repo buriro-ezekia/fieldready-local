@@ -249,6 +249,8 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn(b'id="category-chips"', html)
         self.assertIn(b"priorityFinding", js)
         self.assertIn(b"deterministic scope guard", js)
+        self.assertNotIn(b"result.output_dir", js)
+        self.assertIn(b"exports/", js)
 
     def test_invalid_web_credential(self):
         with self.assertRaises(ValueError):

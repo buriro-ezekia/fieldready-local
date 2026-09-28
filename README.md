@@ -85,9 +85,22 @@ the built-in **2-minute demo path**:
 The interface exposes the verified 14 / 17 / 13 headline, review progress, severity and
 issue-category summaries while preserving the same M1 backend.
 
-Use [the under-three-minute recording script](docs/demo-script.md) when preparing the final
-hackathon video. It includes the narration, technology proof, privacy boundaries and
-screenshot checklist.
+Use:
+
+- [the under-three-minute recording script](docs/demo-script.md) for the video;
+- [the visual capture plan](docs/submission-assets.md) for screenshots;
+- [the field-by-field Devpost package](docs/devpost-submission.md) for submission text.
+
+Before submitting, run the repository audit:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/check_submission.py --hygiene-only
+```
+
+The hygiene-only pass checks tracked repository safety while allowing the three human
+confirmation markers (video URL, mini-challenge choice and pre-existing-work disclosure) to
+remain temporarily unresolved. The final submission audit without `--hygiene-only` must
+pass after those fields are completed.
 
 ## Run the core without package installation
 

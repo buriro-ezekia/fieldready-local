@@ -3,13 +3,16 @@
 This file is structured for direct transfer into the Build, Ship, Shape: Amazon Developer
 Hackathon submission form. Claims are limited to repository and maintainer-supplied evidence.
 
-Three items remain intentionally unresolved because they require maintainer confirmation:
+One item remains intentionally unresolved because it requires a real external artefact:
 
 - REQUIRES_CONFIRMATION_VIDEO_URL
-- REQUIRES_CONFIRMATION_MINI_CHALLENGE
-- REQUIRES_CONFIRMATION_PRE_EXISTING_WORK
 
-Do not remove those markers until the corresponding answer is final.
+The maintainer has confirmed:
+- primary track: Alexa+;
+- mini challenge: none;
+- pre-existing-work disclosure: the project was created during the hackathon window, with only basic repository scaffolding/documentation preceding the working implementation.
+
+Do not replace the remaining video marker until the public YouTube/Vimeo URL exists.
 
 ## Project name
 
@@ -17,7 +20,7 @@ Do not remove those markers until the corresponding answer is final.
 
 ## Tagline
 
-**Catch survey-quality problems locally, explain the evidence, keep supervisors in control.**
+**Turn raw field-survey batches into an evidence-backed supervisor review—locally, audibly, and under human control.**
 
 ## Primary track
 
@@ -30,15 +33,14 @@ FieldReady Local does not claim a live Alexa+ connection or Amazon certification
 
 ## Mini challenge
 
-**REQUIRES_CONFIRMATION_MINI_CHALLENGE**
+**None.**
 
-Current candidate:
+FieldReady Local is being submitted to the **Alexa+ primary track only**. This keeps the
+submission focused on the real self-hosted MCP integration and simulated Alexa+ experience.
 
-- **Open Source**, if the maintainer confirms entry and the project satisfies the
-  mini-challenge disclosure fields at submission time.
-
-Do not claim the AWS Builder mini challenge: the demonstrated stack intentionally avoids
-AWS runtime services and paid cloud dependencies.
+The project does not claim the AWS Builder mini challenge because the demonstrated stack
+does not depend on AWS runtime services. It also does not enter the Open Source mini
+challenge in this submission.
 
 ## Public repository
 
@@ -63,21 +65,26 @@ Use `docs/demo-script.md` for the current 2:35 target script.
 
 ## Short description
 
-FieldReady Local is a local-first survey-quality review assistant for field supervisors.
-It validates a survey batch against versioned deterministic rules, surfaces exact evidence,
-lets an optional local AI interpret the review focus without inventing factual findings,
-requires explicit human approval for decisions, and exports an audit-ready review package
-without modifying or copying the raw source CSV.
+FieldReady Local turns a field-survey batch into a local, evidence-backed supervisor review
+queue before quality problems travel downstream. Versioned deterministic rules identify
+issues; a real self-hosted MCP server exposes only bounded validation/evidence tools; optional
+local AI interprets the supervisor's review focus without becoming the source of truth; and
+every decision still requires explicit human approval.
 
-The hackathon demonstration is a simulated Alexa+ web experience backed by a real local MCP
-server over Streamable HTTP.
+The hackathon demo is a simulated Alexa+ web experience backed by a real Streamable HTTP MCP
+server. The reviewed run can be exported with an integrity manifest while the raw source CSV
+remains unchanged and excluded from the report package.
 
 ## Full project description
 
-Field teams can discover missing values, inconsistent household totals, duplicate
-identifiers, implausible interview durations or poor GPS quality only after data has already
-moved downstream. FieldReady Local moves that review step closer to the point of collection
-without requiring a hosted database or paid inference API.
+Field-data quality problems are most expensive when they are discovered late. A missing
+identifier, inconsistent household total, implausible interview duration or weak GPS capture
+can move from collection into cleaning and analysis before a supervisor sees the evidence.
+
+FieldReady Local moves that review loop onto the same computer as the supervisor. It is
+designed around one principle: **AI may help interpret the review, but deterministic evidence
+and the human reviewer retain authority.** The demonstrated workflow does not require a
+hosted database or paid inference API.
 
 A synthetic survey batch is imported against a package-owned, versioned ruleset. Python
 performs deterministic validation and records each finding with its record ordinal, rule,
@@ -115,6 +122,18 @@ The reviewed run can be exported locally as:
 
 The manifest includes SHA-256 hashes for the generated evidence/report files. The raw source
 CSV is deliberately excluded.
+
+### What makes the approach different
+
+FieldReady Local is intentionally not an "AI cleans my CSV" demo. Its product boundary is the
+core idea:
+
+**deterministic rules own facts -> MCP exposes bounded evidence operations -> local AI
+interprets review focus -> a human explicitly owns the decision -> export preserves the audit
+trail.**
+
+That boundary emerged from measured failures during development rather than from a purely
+conceptual safety claim.
 
 ## How it works
 
@@ -255,6 +274,17 @@ AI and the confirmed-review path.
 - Measured AI failure modes and redesigned the architecture around evidence rather than
   model confidence.
 - Kept the demonstrated system free of paid hosted services.
+- Turned measured model failures into a stricter product architecture instead of hiding
+  them behind prompt changes.
+- Preserved one coherent supervisor workflow from validation through evidence, human review,
+  restart persistence and audit export.
+
+### Why this fits the Alexa+ track
+
+The project uses MCP as an actual product boundary, not a decorative integration. The
+simulated Alexa+ experience consumes a real self-hosted Streamable HTTP MCP server whose
+three-tool surface was exercised end to end and remained unchanged as richer survey rules
+and reporting were added.
 
 ## Product feedback — Alexa+ / MCP path
 
@@ -400,26 +430,11 @@ connection.
 
 ## Pre-existing work disclosure
 
-**REQUIRES_CONFIRMATION_PRE_EXISTING_WORK**
-
-Choose and edit one of these before submission.
-
-### Option A — project started during the hackathon
-
-> FieldReady Local was created during the hackathon submission window. No pre-existing
-> FieldReady Local implementation was reused. The repository, MCP integration, deterministic
-> validation/review workflow, local AI boundary, versioned rulesets, reporting and browser
-> experience were developed for this submission.
-
-Use this only if completely accurate.
-
-### Option B — related work existed before the hackathon
-
-> Before the hackathon, I had [DESCRIBE THE PRE-EXISTING IDEA/CODE/COMPONENT]. During the
-> submission window I built or substantially changed [LIST THE SPECIFIC FIELDREADY LOCAL
-> COMPONENTS CREATED DURING THE HACKATHON].
-
-Replace every bracketed field with the exact truth.
+FieldReady Local was created during the hackathon submission window. The initial repository
+contained only basic project scaffolding/documentation; the working MCP integration,
+deterministic validation and human-review workflow, local AI authority boundary, browser
+experience, versioned survey rulesets, reporting system, verification suite and
+submission-ready interface were developed during the hackathon.
 
 ## Screenshot captions
 
@@ -449,8 +464,8 @@ integrity manifest. The raw source CSV is deliberately excluded.**
 
 - [ ] Confirm participant eligibility under the hackathon rules.
 - [ ] Replace REQUIRES_CONFIRMATION_VIDEO_URL.
-- [ ] Replace REQUIRES_CONFIRMATION_MINI_CHALLENGE.
-- [ ] Replace REQUIRES_CONFIRMATION_PRE_EXISTING_WORK.
+- [x] Mini challenge confirmed: none.
+- [x] Pre-existing-work disclosure confirmed.
 - [ ] Video is public, English and under three minutes.
 - [ ] Video shows the simulated Alexa+ experience and real MCP-backed workflow in action.
 - [ ] Public GitHub repository contains source, assets, instructions and Apache-2.0 licence.
@@ -458,7 +473,6 @@ integrity manifest. The raw source CSV is deliberately excluded.**
 - [ ] Screenshot/video contains no personal Windows filesystem path.
 - [ ] No real survey/respondent data appears.
 - [ ] Product feedback is pasted into the required feedback field.
-- [ ] Track/mini-challenge fields are selected consistently with this document.
-- [ ] If entering Open Source, add the required contribution/repository/user/description fields.
-- [ ] Pre-existing-work disclosure is accurate.
+- [ ] Track fields are selected consistently with this document: Alexa+ primary track, no mini challenge.
+- [x] Pre-existing-work disclosure is confirmed accurate by the maintainer.
 - [ ] Consider submitting the friction logs for the optional judging bonus.

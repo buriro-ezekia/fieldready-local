@@ -15,7 +15,10 @@ FOCUS_SYSTEM = (
     "review_guidance, or combined. reason = asks why/why flagged; verification = asks what "
     "to check/verify/compare; evidence = asks what observed/expected/displayed evidence means; "
     "review_guidance = asks how to review/decide; combined = explicitly asks both why and what "
-    "to verify. Do not answer the question. Return JSON only."
+    "to verify. Examples: 'Why was this finding raised?' -> reason; 'What should I verify?' -> "
+    "verification; 'What do observed and expected mean?' -> evidence; 'How should I review this "
+    "before deciding?' -> review_guidance; 'Why was this flagged and what should I verify?' -> "
+    "combined. Do not answer the question. Return JSON only."
 )
 
 FOCUS_FORMAT = {

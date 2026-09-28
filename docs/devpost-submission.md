@@ -50,7 +50,7 @@ Licence: **Apache-2.0**
 
 ## Demo video
 
-**REQUIRES_CONFIRMATION_VIDEO_URL**
+**https://youtu.be/DfNdp4d5lhs**
 
 Requirements for the final link:
 
@@ -480,7 +480,7 @@ integrity manifest. The raw source CSV is deliberately excluded.**
 ## Final pre-submit checklist
 
 - [ ] Confirm participant eligibility under the hackathon rules.
-- [ ] Replace REQUIRES_CONFIRMATION_VIDEO_URL.
+- [x] Public YouTube demo URL added: https://youtu.be/DfNdp4d5lhs
 - [x] Mini challenge confirmed: none.
 - [x] Pre-existing-work disclosure confirmed.
 - [ ] Video is public, English and under three minutes.

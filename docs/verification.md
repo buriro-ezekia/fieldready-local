@@ -58,16 +58,14 @@ The interface also reported:
 - evidence reference ending in `:1 / component_total`;
 - no review decision was saved by the AI path.
 
-Under the current architecture, the local model classifies the question as in-scope or
-out-of-scope. Python renders the factual explanation from verified evidence. This design was
+Under the current architecture, Python decides scope deterministically. Only in-scope review questions reach the local model, which classifies a non-critical review focus. Python renders the factual explanation from verified evidence. This design was
 introduced after earlier free-form model output produced unsupported speculation.
 
 ## What this establishes
 
 The following core pathway has now been demonstrated on Windows:
 
-**browser -> real MCP evidence -> local AI intent classification -> deterministic grounded
-explanation -> human-controlled review decision**
+**browser -> deterministic scope guard -> real MCP evidence -> local AI review-focus classification -> deterministic grounded explanation -> human-controlled review decision**
 
 The model has no review-write tool and does not edit source records.
 
@@ -132,10 +130,31 @@ Windows also reported that the temporary virtual-environment executable resolved
 8.3 short pathname to the corresponding long pathname. This was informational path
 normalisation and did not affect the successful installed-package checks.
 
+## Broader routing/model evaluation history
+
+Two broader evaluations exposed weaknesses and drove the final router design.
+
+**Raw binary model classifier:** 32 evaluations, 50% accuracy, in-scope recall 1.00,
+out-of-scope recall 0.00. The model predicted in-scope for every question.
+
+**First hybrid router:** deterministic routing was perfect (32/32), but the model still
+controlled the final in-scope/out-of-scope result for review-related questions. It achieved
+26/32 overall (81.25%), with in-scope recall 0.625 and out-of-scope recall 1.00. Six
+legitimate review questions were denied by the model. Mean model latency was 1.856 s,
+median 1.39 s, p95 7.95 s.
+
+The final production design therefore removes scope authority from the model entirely.
+Python's deterministic scope guard makes the final in-scope/out-of-scope decision. In-scope
+questions then reach qwen2.5:1.5b only for an advisory review-focus classification
+(reason, verification, evidence, review_guidance, or combined). Factual text remains
+deterministic.
+
+A final benchmark rerun is pending. It must show 100% scope/routing accuracy and at least
+75% review-focus accuracy on the in-scope cases.
+
 ## Remaining release-hardening gates
 
-The core pathway, dependency snapshot, automated offline proof and clean-install packaging
-proof are verified. Remaining:
+The core pathway and dependency snapshot are verified. Earlier offline and clean-install passes are retained as historical evidence but must be rerun on the final router head. Remaining:
 
 1. Expand measured model evaluation beyond the single demonstrated in-scope question,
    including out-of-scope intent accuracy and repeated latency measurements.

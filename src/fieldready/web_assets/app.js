@@ -176,6 +176,12 @@ async function info() {
   }
   $("runs").value = run;
 
+  const mcp = data.mcp || {};
+  const tools = Array.isArray(mcp.tools) ? mcp.tools : [];
+  $("mcp-live").textContent = mcp.protocol
+    ? "MCP " + mcp.protocol + " · " + tools.length + " tools"
+    : "MCP unavailable";
+
   hasModel = !!data.model;
   $("model-status").textContent = hasModel
     ? "Configured local model: " + data.model +

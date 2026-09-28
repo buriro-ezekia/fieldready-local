@@ -330,8 +330,8 @@ $("export").onclick = () => perform(async () => {
   if (!run) throw new Error("Select a review before exporting.");
   const result = await api("/api/export", {run_id: run});
   message(
-    "Review package exported locally: " + result.output_dir +
-    ". Raw source CSV was not included."
+    "Review package exported locally under exports/" + run +
+    "/. Raw source CSV was not included."
   );
 });
 

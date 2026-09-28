@@ -188,7 +188,7 @@ class StoreTests(unittest.TestCase):
             self.store.validate_batch(self.batch, "validation-2")
 
     def test_validation_transaction_rolls_back(self):
-        with patch("fieldready.storage.validate", side_effect=ValueError("Injected failure")):
+        with patch("fieldready.storage.validate_for_ruleset", side_effect=ValueError("Injected failure")):
             with self.assertRaises(ValueError):
                 self.store.validate_batch(self.batch, "failed-validation")
         with self.store.connection() as db:

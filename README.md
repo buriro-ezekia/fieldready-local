@@ -30,6 +30,47 @@ The local model does **not** decide whether a question is allowed and does **not
 See [verification evidence](docs/verification.md), [browser guide](docs/browser.md) and
 [model evaluation](docs/model-evaluation.md).
 
+## M1 branch — versioned rules and supervisor reporting
+
+The `feat/versioned-rules-reporting` branch adds a second, richer synthetic workflow while
+preserving the original four-column demo for regression evidence.
+
+New M1 capabilities:
+
+- packaged, versioned rulesets bound to each imported batch;
+- SQLite schema v2 with automatic v1 migration;
+- richer field-survey demo with 14 fictional records;
+- expected answer key: **17 findings affecting 13 records**;
+- severity summary: **3 critical, 9 high, 5 medium**;
+- completeness, uniqueness, validity, consistency, interview-duration and GPS checks;
+- explicit not-evaluable rule applications rather than silent passes;
+- deterministic rule-specific explanation and verification text;
+- ruleset-aware browser import and saved-review labels;
+- local export of `summary.md`, `findings.csv`, `review_history.csv` and `manifest.json`;
+- export manifest SHA-256 hashes and **no raw source CSV**;
+- fixed browser export directory and unchanged three-tool MCP surface.
+
+The richer demo is intentionally synthetic. User-supplied arbitrary rule JSON is not enabled;
+rulesets remain package-owned and test-covered.
+
+Source-checkout examples:
+
+```powershell
+python scripts/fieldready.py rulesets
+python scripts/fieldready.py demo-field
+```
+
+After a run is reviewed:
+
+```powershell
+python scripts/fieldready.py export RUN_ID .\runtime\review-package
+```
+
+See [versioned rules and reporting](docs/rulesets.md) for the rule/operator contract,
+fixture expectations and export privacy boundary.
+
+**M1 Windows verification is complete for the deterministic rules/reporting path.** The maintainer reported 115 passing tests, successful real MCP/web/export/restart integration, and supplied a browser screenshot confirming the 14/17/13 field-survey counts plus successful local export. See [M1 verification evidence](docs/m1-verification.md).
+
 ## Run the core without package installation
 
 From the repository root, with Python 3.11 or newer:
@@ -111,8 +152,9 @@ The benchmark writes `runtime/intent-eval.json`. Scope and routing must be perfe
 See [release-hardening procedure](docs/release-hardening.md) and
 [model evaluation](docs/model-evaluation.md).
 
-Remaining work includes executing those two gates, expanded rules/reporting and the
-final demo/submission materials.
+The M0 release-hardening gates are tracked separately. On the M1 branch, the immediate
+next step is to execute the expanded test suite and richer field-survey demo before any
+M1 result is promoted to verified evidence.
 
 ## Cost, privacy and licence
 

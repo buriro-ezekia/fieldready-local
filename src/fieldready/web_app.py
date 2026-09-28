@@ -1,11 +1,12 @@
-"""Local authenticated browser surface. Review writes are separate from model access."""
+"""Local authenticated browser surface. Review writes remain separate from model access."""
 import asyncio
 import hmac
 import json
 import re
 import sqlite3
-from importlib.resources import files
+from pathlib import Path
 
+from fieldready.rule_engine import FIELD_RULESET, LEGACY_RULESET, demo_bytes, list_rulesets
 from fieldready.rules import MAX_BYTES
 from fieldready.storage import Store
 
@@ -26,7 +27,8 @@ class WebApp:
             raise ValueError("Invalid web credential.")
         if type(port) is not int or not 1 <= port <= 65535:
             raise ValueError("Invalid web port.")
-        self.store = Store(db_path)
+        self.db_path = Path(db_path).resolve()
+        self.store = Store(self.db_path)
         self.gateway = gateway
         self.explainer = explainer
         self.auth = ("Bearer " + token).encode()
@@ -45,6 +47,7 @@ class WebApp:
                     return
         if scope["type"] != "http":
             return
+
         headers = {}
         for key, value in scope.get("headers", []):
             key = key.lower()
@@ -55,20 +58,32 @@ class WebApp:
             return await self.reply(send, 421, {"error": "Use the printed 127.0.0.1 address."})
         if b"origin" in headers and headers[b"origin"] != self.origin:
             return await self.reply(send, 403, {"error": "Foreign origin rejected."})
+
         path, method = scope["path"], scope["method"]
         if path in ASSETS and method == "GET":
+            from importlib.resources import files
             name, content_type = ASSETS[path]
             data = files("fieldready").joinpath("web_assets/" + name).read_bytes()
             return await self.reply(send, 200, data, content_type)
+
         if not hmac.compare_digest(headers.get(b"authorization", b""), self.auth):
             return await self.reply(send, 401, {"error": "Open the full session link printed by the launcher."})
+
         try:
             if path == "/api/info" and method == "GET":
                 with self.store.connection() as db:
                     runs = [dict(row) for row in db.execute(
-                        "SELECT id,created_at FROM runs ORDER BY created_at DESC LIMIT 100")]
-                result = {"runs": runs, "model": self.explainer.model if self.explainer else None,
-                          "notice": "Synthetic data only. No live Alexa+ integration."}
+                        """SELECT r.id,r.created_at,b.ruleset_id
+                           FROM runs r JOIN batches b ON b.id=r.batch_id
+                           ORDER BY r.created_at DESC LIMIT 100"""
+                    )]
+                result = {
+                    "runs": runs,
+                    "rulesets": list_rulesets(),
+                    "model": self.explainer.model if self.explainer else None,
+                    "notice": "Synthetic data only. No live Alexa+ integration.",
+                }
+
             elif path.startswith("/api/") and method == "POST":
                 if headers.get(b"content-type", b"").split(b";")[0] != b"application/json":
                     return await self.reply(send, 415, {"error": "JSON content type required."})
@@ -86,37 +101,68 @@ class WebApp:
                 if not isinstance(body, dict):
                     raise ValueError("Request must be a JSON object.")
                 result = await self.action(path, body)
+
             else:
                 return await self.reply(send, 404, {"error": "No such route or method."})
+
             await self.reply(send, 200, result)
+
         except (ValueError, TypeError, KeyError) as exc:
             await self.reply(send, 400, {"error": str(exc)})
         except (RuntimeError, OSError, sqlite3.Error, TimeoutError):
-            await self.reply(send, 503, {"error": "Local service unavailable. Check the terminal, model name and installation. No fallback was used."})
+            await self.reply(
+                send, 503,
+                {"error": "Local service unavailable. Check the terminal, model name and installation. No fallback was used."},
+            )
 
     async def action(self, path: str, body: dict) -> dict:
-        if path in ("/api/demo", "/api/import"):
-            fields(body, {"request_id"} | ({"csv"} if path.endswith("import") else set()))
-            if path.endswith("demo"):
-                data = files("fieldready").joinpath("data/survey.csv").read_bytes()
+        if path in ("/api/demo", "/api/demo-field", "/api/import"):
+            optional = {"ruleset_id"} if path == "/api/import" else set()
+            required = {"request_id"} | ({"csv"} if path == "/api/import" else set())
+            fields(body, required, optional)
+
+            if path == "/api/demo":
+                ruleset_id = LEGACY_RULESET
+                data = demo_bytes(ruleset_id)
+            elif path == "/api/demo-field":
+                ruleset_id = FIELD_RULESET
+                data = demo_bytes(ruleset_id)
             else:
                 if not isinstance(body["csv"], str):
                     raise ValueError("CSV content must be text.")
                 data = body["csv"].encode("utf-8")
+                ruleset_id = body.get("ruleset_id", LEGACY_RULESET)
+
             if len(data) > MAX_BYTES:
                 raise ValueError("CSV exceeds 1 MiB.")
-            batch = await asyncio.to_thread(self.store.register, data)
-            return await self.gateway.call("validate_batch", {"batch_id": batch, "request_id": body["request_id"]})
+            batch = await asyncio.to_thread(self.store.register, data, ruleset_id)
+            return await self.gateway.call(
+                "validate_batch", {"batch_id": batch, "request_id": body["request_id"]}
+            )
+
         if path == "/api/run":
             fields(body, {"run_id"}, {"status", "offset"})
             summary = await self.gateway.call("get_review_summary", {"run_id": body["run_id"]})
             page = await self.gateway.call("list_findings", {
-                "run_id": body["run_id"], "status": body.get("status"),
-                "offset": body.get("offset", 0), "limit": 50})
+                "run_id": body["run_id"],
+                "status": body.get("status"),
+                "offset": body.get("offset", 0),
+                "limit": 50,
+            })
             return {"summary": summary, "page": page}
+
         if path == "/api/decision":
             fields(body, {"finding_id", "status", "reason", "expected_revision", "request_id", "confirmed"})
             return await asyncio.to_thread(self.store.decide, **body)
+
+        if path == "/api/export":
+            fields(body, {"run_id"})
+            from fieldready.reporting import export_review_package
+            output_dir = self.db_path.parent / "exports" / body["run_id"]
+            return await asyncio.to_thread(
+                export_review_package, self.store, body["run_id"], output_dir, overwrite=True
+            )
+
         if path == "/api/explain":
             fields(body, {"run_id", "finding_id", "question"})
             if self.explainer is None:
@@ -131,18 +177,29 @@ class WebApp:
             async with self.model_lock:
                 summary = await self.gateway.call("get_review_summary", {"run_id": run})
                 page = await self.gateway.call("list_findings", {
-                    "run_id": run, "offset": int(ordinal) - 1, "limit": 1})
+                    "run_id": run, "offset": int(ordinal) - 1, "limit": 1,
+                })
                 if not page["items"] or page["items"][0]["finding_id"] != body["finding_id"]:
                     raise ValueError("Finding was not found.")
-                return await asyncio.to_thread(self.explainer.explain, summary, page["items"][0], body["question"])
+                return await asyncio.to_thread(
+                    self.explainer.explain, summary, page["items"][0], body["question"]
+                )
+
         raise ValueError("Unknown action.")
 
     @staticmethod
     async def reply(send, status, value, content_type="application/json; charset=utf-8"):
         data = value if isinstance(value, bytes) else json.dumps(value, ensure_ascii=True).encode()
-        headers = [(b"content-type", content_type.encode()), (b"content-length", str(len(data)).encode()),
-                   (b"cache-control", b"no-store"), (b"x-content-type-options", b"nosniff"),
-                   (b"referrer-policy", b"no-referrer"), (b"x-frame-options", b"DENY"),
-                   (b"content-security-policy", b"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")]
+        headers = [
+            (b"content-type", content_type.encode()),
+            (b"content-length", str(len(data)).encode()),
+            (b"cache-control", b"no-store"),
+            (b"x-content-type-options", b"nosniff"),
+            (b"referrer-policy", b"no-referrer"),
+            (b"x-frame-options", b"DENY"),
+            (b"content-security-policy",
+             b"default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; "
+             b"base-uri 'none'; form-action 'self'; frame-ancestors 'none'"),
+        ]
         await send({"type": "http.response.start", "status": status, "headers": headers})
         await send({"type": "http.response.body", "body": data})

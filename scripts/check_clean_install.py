@@ -119,6 +119,8 @@ def main() -> int:
                     "from importlib.resources import files;"
                     "p=files('fieldready');"
                     "assert p.joinpath('data/survey.csv').is_file();"
+                    "assert p.joinpath('data/field_survey_v1.csv').is_file();"
+                    "assert p.joinpath('rulesets/field-survey-v1.0.0.json').is_file();"
                     "assert p.joinpath('web_assets/index.html').is_file();"
                     "print('PACKAGE DATA: PASS')"
                 )

@@ -1,0 +1,92 @@
+{
+  "id": "field-survey-v1.0.0",
+  "version": "1.0.0",
+  "title": "Synthetic field-survey quality rules",
+  "description": "Versioned demonstration rules for completeness, uniqueness, validity, consistency, duration and GPS quality.",
+  "record_id_field": "record_id",
+  "demo_file": "data/field_survey_v1.csv",
+  "columns": {
+    "record_id": {"type": "string", "required": true, "severity": "critical"},
+    "district": {"type": "enum", "required": true, "allowed": ["Central", "North", "South"], "severity": "high"},
+    "enumerator_id": {"type": "string", "required": true, "severity": "high"},
+    "consent": {"type": "enum", "required": true, "allowed": ["yes", "no"], "severity": "high"},
+    "respondent_age": {"type": "integer", "required": false, "minimum": 18, "maximum": 99, "severity": "high"},
+    "adults": {"type": "integer", "required": true, "minimum": 0, "maximum": 30, "severity": "high"},
+    "children": {"type": "integer", "required": true, "minimum": 0, "maximum": 30, "severity": "high"},
+    "household_size": {"type": "integer", "required": true, "minimum": 1, "maximum": 60, "severity": "high"},
+    "children_under5": {"type": "integer", "required": true, "minimum": 0, "maximum": 30, "severity": "high"},
+    "interview_minutes": {"type": "integer", "required": true, "severity": "medium"},
+    "water_source": {"type": "enum", "required": true, "allowed": ["piped", "borehole", "well", "surface", "other"], "severity": "medium"},
+    "water_source_other": {"type": "string", "required": false, "severity": "medium"},
+    "gps_accuracy_m": {"type": "integer", "required": true, "severity": "medium"}
+  },
+  "rules": [
+    {
+      "id": "record_id.unique",
+      "type": "unique",
+      "field": "record_id",
+      "category": "uniqueness",
+      "severity": "critical"
+    },
+    {
+      "id": "respondent_age.when_consent",
+      "type": "conditional_required",
+      "if": {"field": "consent", "equals": "yes"},
+      "field": "respondent_age",
+      "category": "completeness",
+      "severity": "high",
+      "expected": "An age when consent is yes",
+      "message": "respondent_age is required when consent is yes.",
+      "verification": "Check the consent response and respondent age before deciding."
+    },
+    {
+      "id": "household.component_total",
+      "type": "sum_equals",
+      "target": "household_size",
+      "components": ["adults", "children"],
+      "category": "consistency",
+      "severity": "high"
+    },
+    {
+      "id": "children_under5.le_children",
+      "type": "less_equal",
+      "left": "children_under5",
+      "right": "children",
+      "category": "consistency",
+      "severity": "high"
+    },
+    {
+      "id": "interview.duration",
+      "type": "between",
+      "field": "interview_minutes",
+      "minimum": 10,
+      "maximum": 180,
+      "category": "duration",
+      "severity": "medium",
+      "message": "Interview duration falls outside the 10–180 minute review range.",
+      "verification": "Check timestamps or field notes before deciding whether the duration is plausible."
+    },
+    {
+      "id": "water_source.other_text",
+      "type": "conditional_required",
+      "if": {"field": "water_source", "equals": "other"},
+      "field": "water_source_other",
+      "category": "completeness",
+      "severity": "medium",
+      "expected": "A description when water_source is other",
+      "message": "water_source_other is required when water_source is other.",
+      "verification": "Check the source response for the specified alternative water source."
+    },
+    {
+      "id": "gps.accuracy",
+      "type": "between",
+      "field": "gps_accuracy_m",
+      "minimum": 0,
+      "maximum": 50,
+      "category": "geospatial",
+      "severity": "medium",
+      "message": "GPS accuracy is poorer than the 50 metre review threshold.",
+      "verification": "Check the recorded GPS accuracy and whether the location should be recollected."
+    }
+  ]
+}

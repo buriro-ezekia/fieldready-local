@@ -71,6 +71,24 @@ fixture expectations and export privacy boundary.
 
 **M1 Windows verification is complete for the deterministic rules/reporting path.** The maintainer reported 115 passing tests, successful real MCP/web/export/restart integration, and supplied a browser screenshot confirming the 14/17/13 field-survey counts plus successful local export. See [M1 verification evidence](docs/m1-verification.md).
 
+## Judge/demo path
+
+For a concise presentation, start the richer field-survey workflow in the browser and follow
+the built-in **2-minute demo path**:
+
+1. Field-survey demo
+2. Review next priority
+3. Explain with local model
+4. Confirm one human decision
+5. Export review package
+
+The interface exposes the verified 14 / 17 / 13 headline, review progress, severity and
+issue-category summaries while preserving the same M1 backend.
+
+Use [the under-three-minute recording script](docs/demo-script.md) when preparing the final
+hackathon video. It includes the narration, technology proof, privacy boundaries and
+screenshot checklist.
+
 ## Run the core without package installation
 
 From the repository root, with Python 3.11 or newer:

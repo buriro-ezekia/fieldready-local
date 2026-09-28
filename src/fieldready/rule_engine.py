@@ -268,7 +268,10 @@ def validate_for_ruleset(data: bytes, ruleset_id: str) -> dict[str, Any]:
 
         if rule_type == "unique":
             field = rule["field"]
-            counts = Counter(row[field] for row in rows if row[field] and field not in invalid_fields[rows.index(row)])
+            counts = Counter(
+                row[field] for index, row in enumerate(rows)
+                if row[field] and field not in invalid_fields[index]
+            )
             for ordinal, row in enumerate(rows, start=1):
                 value = row[field]
                 if not value or field in invalid_fields[ordinal - 1]:

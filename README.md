@@ -4,31 +4,39 @@ A local survey-review assistant for the Amazon Developer Hackathon: a **simulate
 Alexa+ experience with a real local MCP backend**, not a live Alexa+ integration or
 an Amazon-certified application. Use synthetic data only.
 
-## Current status — core and automated offline workflow verified
+## Current status — verified local-first review workflow
 
-The maintainer has demonstrated the core workflow on Windows:
+The current Windows-verified product path is:
 
-**browser -> deterministic scope guard -> real MCP evidence -> local AI review-focus classification -> deterministic grounded explanation -> human-controlled review decision**
+**browser -> live MCP evidence -> deterministic scope -> optional local AI review-focus classification -> deterministic grounded explanation -> explicit human decision -> local audit export**
 
-The current synthetic prototype includes deterministic CSV checks, immutable source snapshots,
-SQLite review history, explicit confirmation, stale/replay protection, paginated findings,
-a local CLI, an official MCP Python SDK v2 server and an authenticated local browser interface.
+The richer `field-survey-v1.0.0` workflow has been exercised through real MCP, the browser
+backend, SQLite persistence, report export and service restart. Maintainer-supplied evidence
+includes:
 
-Verified Windows evidence includes:
+- **115 passing M1 tests**;
+- negotiated MCP protocol **2026-07-28**;
+- the exact three-tool MCP surface:
+  `validate_batch`, `list_findings`, `get_review_summary`;
+- richer synthetic demo: **14 records / 17 findings / 13 affected records**;
+- severity: **3 critical / 9 high / 5 medium**;
+- **80 evaluable / 5 not-evaluable** rule applications;
+- one explicit human decision persisting after restart;
+- four-file local review package with the raw source CSV excluded;
+- manual browser rendering and successful local export;
+- a separate explicit network-disabled full-stack pass with local Ollama inference.
 
-- real MCP protocol **2026-07-28**;
-- **8 records, 6 findings affecting 6 records** in the bundled synthetic batch;
-- review persistence across MCP/web restart;
-- real web -> MCP -> SQLite integration;
-- successful browser review and saved human decisions;
-- real local `qwen2.5:1.5b` inference;
-- a demonstrated grounded `component_total` explanation in **8.46 seconds**;
-- an automated network-disabled full-stack pass with **94 tests**, all external probes unreachable and local-model inference measured at **9.52 seconds**.
+The browser now shows the **live negotiated MCP protocol and tool count** directly in the
+header, so the required technology is visible in the product rather than only in terminal
+logs.
 
-The local model does **not** decide whether a question is allowed and does **not** write factual review prose. Python decides scope deterministically. Only in-scope review questions reach the local model, which classifies a non-critical review focus such as reason, verification, evidence or review guidance. Python renders all factual wording from verified evidence. The model has no review-write tool.
+The local model does **not** control scope, author factual findings or save decisions.
+Python owns scope and factual evidence. For accepted review questions, the local model only
+classifies a non-critical review focus; Python renders the explanation from verified rule
+evidence.
 
-See [verification evidence](docs/verification.md), [browser guide](docs/browser.md) and
-[model evaluation](docs/model-evaluation.md).
+See [M1 verification](docs/m1-verification.md), [verification history](docs/verification.md),
+[model evaluation](docs/model-evaluation.md) and [versioned rules](docs/rulesets.md).
 
 ## M1 branch — versioned rules and supervisor reporting
 
@@ -98,10 +106,10 @@ Before submitting, run the repository audit:
 .\.venv\Scripts\python.exe scripts/check_submission.py --hygiene-only
 ```
 
-The hygiene-only pass checks tracked repository safety while allowing the three human
-confirmation markers (video URL, mini-challenge choice and pre-existing-work disclosure) to
-remain temporarily unresolved. The final submission audit without `--hygiene-only` must
-pass after those fields are completed.
+The mini-challenge choice and pre-existing-work disclosure are now confirmed. The
+hygiene-only pass checks tracked repository safety while allowing the **public demo video
+URL** to remain temporarily unresolved. After the video is uploaded and its URL is inserted,
+the final submission audit without `--hygiene-only` must pass.
 
 ## Run the core without package installation
 
@@ -161,32 +169,37 @@ writes use the trusted local control surface; validation and evidence reads use 
 The launcher starts a dedicated loopback Ollama service with cloud access disabled. It does
 not download a model or silently substitute a hosted API.
 
-## Release hardening
+## Verification and reproducibility
 
-The tested Windows dependency snapshot is committed. Earlier automated offline and clean-install gates passed before the latest router redesign; they must be rerun once the current focus benchmark passes so final evidence matches the final branch head. The offline gate confirmed that external probes were unreachable
-before exercising MCP, web, SQLite, local AI and a human-confirmed review using only local
-services and synthetic temporary state.
+FieldReady Local separates evidence types rather than treating one test suite as proof of
+everything:
 
-Next gates:
+- core unit/regression checks;
+- real MCP protocol/tool execution;
+- web -> MCP -> SQLite integration;
+- local-model execution;
+- explicit network-disabled operation;
+- versioned-rules/reporting integration;
+- manual browser observation.
+
+The tested Windows dependency snapshot is committed in `requirements.lock.txt` with
+metadata in `docs/environment-lock.json`. A fresh-environment install/package check was
+also demonstrated during release hardening.
+
+For the current richer workflow, use:
 
 ```powershell
-$py = ".\\.venv\\Scripts\\python.exe"
+$py = ".\.venv\Scripts\python.exe"
 
-# Fresh temporary environment + installed-package verification
-& $py scripts/check_clean_install.py
-
-# 16 balanced questions x 2 repeats = 32 production-router evaluations
-& $py scripts/evaluate_intent.py --model "qwen2.5:1.5b" --repeats 2
+& $py scripts/check_local.py
+& $py scripts/check_m1_integration.py
+& $py scripts/check_submission.py --hygiene-only
 ```
 
-The benchmark writes `runtime/intent-eval.json`. Scope and routing must be perfect because they are deterministic; the advisory local-model focus classifier must reach at least 75% accuracy on the in-scope cases.
-
-See [release-hardening procedure](docs/release-hardening.md) and
-[model evaluation](docs/model-evaluation.md).
-
-The M0 release-hardening gates are tracked separately. On the M1 branch, the immediate
-next step is to execute the expanded test suite and richer field-survey demo before any
-M1 result is promoted to verified evidence.
+See [release hardening](docs/release-hardening.md) and
+[M1 verification](docs/m1-verification.md) for the evidence boundaries. The remaining
+submission blocker is operational, not architectural: record/upload the public <3 minute
+demo and insert its URL into `docs/devpost-submission.md`.
 
 ## Cost, privacy and licence
 

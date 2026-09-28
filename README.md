@@ -69,9 +69,7 @@ python scripts/fieldready.py export RUN_ID .\runtime\review-package
 See [versioned rules and reporting](docs/rulesets.md) for the rule/operator contract,
 fixture expectations and export privacy boundary.
 
-**M1 Windows verification is still pending on this branch.** Do not treat the M0 evidence
-below as proof that the new versioned-rule/reporting code has passed until the current
-branch test suite and richer demo are executed.
+**M1 Windows verification is complete for the deterministic rules/reporting path.** The maintainer reported 115 passing tests, successful real MCP/web/export/restart integration, and supplied a browser screenshot confirming the 14/17/13 field-survey counts plus successful local export. See [M1 verification evidence](docs/m1-verification.md).
 
 ## Run the core without package installation
 

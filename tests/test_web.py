@@ -237,11 +237,18 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         })
         self.assertEqual(denied[0], 400)
 
-    async def test_dom_uses_text_not_untrusted_html(self):
+    async def test_demo_polish_assets_keep_safe_dom_and_priority_flow(self):
+        _, html, _ = await self.request("/")
         _, js, _ = await self.request("/app.js")
         self.assertNotIn(b"innerHTML", js)
         self.assertIn(b"textContent", js)
         self.assertIn(b"history.replaceState", js)
+        self.assertIn(b'id="review-next"', html)
+        self.assertIn(b'id="reviewed"', html)
+        self.assertIn(b'id="severity-chips"', html)
+        self.assertIn(b'id="category-chips"', html)
+        self.assertIn(b"priorityFinding", js)
+        self.assertIn(b"deterministic scope guard", js)
 
     def test_invalid_web_credential(self):
         with self.assertRaises(ValueError):

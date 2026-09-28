@@ -18,7 +18,7 @@ class EvaluationDesignTests(unittest.TestCase):
         self.assertEqual(len(cases), 16)
         self.assertEqual(len({case["id"] for case in cases}), 16)
         counts = {"in_scope": 0, "out_of_scope": 0}
-        valid_focus = {"reason", "verification", "evidence", "review_guidance"}
+        valid_focus = {"reason", "verification", "evidence", "review_guidance", "combined"}
         for case in cases:
             self.assertIn(case["expected"], counts)
             self.assertTrue(case["question"].strip())

@@ -150,6 +150,10 @@ def main() -> int:
             blockers.append("Devpost package is missing the public repository URL.")
         if "Alexa+" not in submission or "MCP" not in submission:
             blockers.append("Devpost package is missing the Alexa+/MCP track description.")
+        if "## Mini challenge\n\n**None.**" not in submission:
+            blockers.append("Devpost package no longer confirms mini challenge: none.")
+        if "FieldReady Local was created during the hackathon submission window." not in submission:
+            blockers.append("Devpost package is missing the confirmed pre-existing-work disclosure.")
 
     try:
         status = run_git("status", "--porcelain")

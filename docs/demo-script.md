@@ -127,7 +127,7 @@ Click **Export review package**.
 > The supervisor can export an audit-ready local package containing a Markdown summary,
 > findings CSV, review-history CSV and integrity manifest.
 
-Point to the success message.
+Point to the screenshot-safe success message, which shows only the relative local `exports/<run-id>/` location.
 
 > The raw source CSV is deliberately excluded.
 

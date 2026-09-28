@@ -17,6 +17,7 @@ REQUIRED_FILES = (
     "docs/demo-script.md",
     "docs/devpost-submission.md",
     "docs/submission-assets.md",
+    "docs/submission-requirements-map.md",
     "docs/m1-verification.md",
     "docs/rulesets.md",
 )

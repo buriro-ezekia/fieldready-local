@@ -81,6 +81,8 @@ fixture expectations and export privacy boundary.
 
 ## Judge/demo path
 
+**Public demo video:** https://youtu.be/DfNdp4d5lhs
+
 For a concise presentation, start the richer field-survey workflow in the browser and follow
 the built-in **2-minute demo path**:
 

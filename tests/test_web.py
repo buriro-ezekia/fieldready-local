@@ -5,6 +5,7 @@ import unittest
 from importlib.resources import files
 from pathlib import Path
 
+from fieldready.rule_engine import FIELD_RULESET, demo_bytes
 from fieldready.storage import Store
 from fieldready.web_app import WebApp
 
@@ -180,6 +181,57 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         _, data, _ = await self.request("/api/run", {"run_id": body["finding_id"].split(":")[0], "status": "open", "offset": 1})
         self.assertEqual(data["page"]["total_matching"], 5)
         self.assertEqual(len(data["page"]["items"]), 4)
+
+    async def test_field_demo_uses_gateway_and_rich_ruleset(self):
+        status, result, _ = await self.request("/api/demo-field", {"request_id": "rich-demo"})
+        self.assertEqual(status, 200)
+        self.assertEqual(result["finding_count"], 17)
+        self.assertEqual(result["affected_rows"], 13)
+        self.assertEqual(result["ruleset"], FIELD_RULESET)
+        self.assertEqual(result["severity_counts"], {"critical": 3, "high": 9, "medium": 5})
+        self.assertEqual(self.gateway.calls, ["validate_batch"])
+
+    async def test_ruleset_aware_import_is_bound_to_selected_version(self):
+        status, result, _ = await self.request("/api/import", {
+            "request_id": "rich-import",
+            "ruleset_id": FIELD_RULESET,
+            "csv": demo_bytes(FIELD_RULESET).decode("utf-8"),
+        })
+        self.assertEqual(status, 200)
+        self.assertEqual(result["ruleset"], FIELD_RULESET)
+        with self.app.store.connection() as db:
+            stored = db.execute(
+                "SELECT ruleset_id FROM batches WHERE id=?", (result["batch_id"],)
+            ).fetchone()
+        self.assertEqual(stored["ruleset_id"], FIELD_RULESET)
+
+    async def test_info_exposes_rulesets_and_saved_run_ruleset(self):
+        status, result, _ = await self.request("/api/demo-field", {"request_id": "catalog-demo"})
+        self.assertEqual(status, 200)
+        _, info, _ = await self.request("/api/info")
+        rulesets = {item["id"] for item in info["rulesets"]}
+        self.assertIn(FIELD_RULESET, rulesets)
+        self.assertEqual(info["runs"][0]["id"], result["run_id"])
+        self.assertEqual(info["runs"][0]["ruleset_id"], FIELD_RULESET)
+
+    async def test_export_uses_fixed_local_directory_and_excludes_source(self):
+        status, result, _ = await self.request("/api/demo-field", {"request_id": "export-demo"})
+        self.assertEqual(status, 200)
+        run_id = result["run_id"]
+        status, exported, _ = await self.request("/api/export", {"run_id": run_id})
+        self.assertEqual(status, 200)
+        self.assertFalse(exported["source_csv_included"])
+        output = Path(exported["output_dir"])
+        self.assertEqual(output, self.db.parent / "exports" / run_id)
+        self.assertEqual(
+            {path.name for path in output.iterdir()},
+            {"summary.md", "findings.csv", "review_history.csv", "manifest.json"},
+        )
+        denied = await self.request("/api/export", {
+            "run_id": run_id,
+            "output_dir": str(self.db.parent / "attacker-selected"),
+        })
+        self.assertEqual(denied[0], 400)
 
     async def test_dom_uses_text_not_untrusted_html(self):
         _, js, _ = await self.request("/app.js")

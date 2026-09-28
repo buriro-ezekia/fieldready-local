@@ -3,16 +3,13 @@
 This file is structured for direct transfer into the Build, Ship, Shape: Amazon Developer
 Hackathon submission form. Claims are limited to repository and maintainer-supplied evidence.
 
-One item remains intentionally unresolved because it requires a real external artefact:
-
-- REQUIRES_CONFIRMATION_VIDEO_URL
+All submission confirmation fields are now resolved.
 
 The maintainer has confirmed:
 - primary track: Alexa+;
 - mini challenge: none;
-- pre-existing-work disclosure: the project was created during the hackathon window, with only basic repository scaffolding/documentation preceding the working implementation.
-
-Do not replace the remaining video marker until the public YouTube/Vimeo URL exists.
+- pre-existing-work disclosure: the project was created during the hackathon window, with only basic repository scaffolding/documentation preceding the working implementation;
+- public demo video: https://youtu.be/DfNdp4d5lhs.
 
 ## Project name
 

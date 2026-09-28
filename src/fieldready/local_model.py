@@ -117,8 +117,23 @@ def grounded_text(finding: dict) -> str:
             f"Verification: check the source value for {field} before recording a review outcome."
         ),
     }
-    return explanations.get(
-        rule,
+    if rule in explanations:
+        return explanations[rule]
+
+    message = finding.get("message")
+    verification = finding.get("verification")
+    if isinstance(message, str) and message.strip():
+        verify_text = (
+            verification.strip()
+            if isinstance(verification, str) and verification.strip()
+            else f"Check the displayed evidence for {field} against the source before deciding."
+        )
+        return (
+            f"Rule {rule} · record ordinal {row}. {message.strip()} "
+            f"Observed: {observed}; expected: {expected}. Verification: {verify_text}"
+        )
+
+    return (
         f"Rule {rule} · record ordinal {row}. The finding concerns {field}: observed {observed}; "
         f"expected {expected}. Verification: check the displayed evidence against the source before "
         "recording a review outcome."

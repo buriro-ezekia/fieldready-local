@@ -133,7 +133,12 @@ def main() -> int:
                         })
                         require(status == 200, "Offline local-AI explanation failed.")
                         require(explanation["model"] == args.model, "Unexpected offline model identity.")
-                        require(explanation["intent"] == "in_scope", "Known review question was not in_scope.")
+                        require(explanation["intent"] == "in_scope", "Deterministic scope guard rejected a known review question.")
+                        require(explanation["routing_source"] == "local_model_focus"
+                                and explanation["model_invoked"] is True,
+                                "Offline local AI focus classification did not run.")
+                        require(explanation["focus"] in {"reason", "verification", "evidence", "review_guidance", "combined"},
+                                "Offline local AI returned an unsupported focus.")
                         require(explanation["text"] == grounded_text(finding),
                                 "Offline explanation was not deterministic evidence rendering.")
 
@@ -160,6 +165,7 @@ def main() -> int:
                                 "Offline confirmed review was not persisted.")
 
                         print("OFFLINE MODEL:", explanation["model"])
+                        print("OFFLINE MODEL FOCUS:", explanation["focus"])
                         print("OFFLINE MODEL ELAPSED SECONDS:", explanation["elapsed_seconds"])
                         print("OFFLINE GROUNDED OUTPUT:")
                         print(explanation["text"])

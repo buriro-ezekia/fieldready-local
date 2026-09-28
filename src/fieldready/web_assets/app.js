@@ -90,10 +90,11 @@ $("ask-form").onsubmit = event => {event.preventDefault();perform(async()=>{
   if(!selected || !hasModel)throw new Error("Select a finding and enable an installed local model first.");
   const id=selected.finding_id; $("ask").disabled=true; $("answer").textContent="Running local inference… No review decision will be saved.";
   try {const result=await api("/api/explain",{run_id:run,finding_id:id,question:$("question").value});
-    $("answer").textContent=result.text+"\n\n"+result.notice+"\nModel: "+result.model+" · "+result.elapsed_seconds+" s · Evidence: "+result.finding_id+" / "+result.rule_id;
+    const focus = result.focus ? " · Focus: " + result.focus : "";
+    $("answer").textContent=result.text+"\n\n"+result.notice+"\nModel: "+result.model+focus+" · "+result.elapsed_seconds+" s · Evidence: "+result.finding_id+" / "+result.rule_id;
     message(result.routing_source === "deterministic_scope_guard"
-      ? "The local scope guard rejected an unrelated question before model inference."
-      : "Local AI classified the review-related question; the explanation was assembled from verified evidence.");
+      ? "The deterministic scope guard rejected an unrelated question before model inference."
+      : "Scope was accepted deterministically; local AI classified the review focus and Python rendered the evidence-grounded explanation.");
   } catch(error){$("answer").textContent="No explanation produced. "+error.message;throw error;}
   finally{$("ask").disabled=!hasModel || !selected;}
 });};

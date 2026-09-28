@@ -73,6 +73,10 @@ def tracked_files() -> list[str]:
     return [item for item in output.split("\0") if item]
 
 
+def current_branch() -> str:
+    return run_git("branch", "--show-current").strip()
+
+
 def scan_text(path: Path) -> str | None:
     try:
         if path.stat().st_size > 2_000_000:
@@ -101,6 +105,21 @@ def main() -> int:
         return 2
 
     tracked_set = set(tracked)
+
+    try:
+        branch = current_branch()
+        if not args.hygiene_only and branch != "main":
+            blockers.append(
+                "Final submission audit must run from main; current branch is "
+                + (branch or "(detached HEAD)") + "."
+            )
+        elif args.hygiene_only and branch != "main":
+            warnings.append(
+                "Development branch in use: " + (branch or "(detached HEAD)")
+                + ". Final audit will require main after the verified branch is merged."
+            )
+    except RuntimeError as exc:
+        blockers.append("Could not determine current Git branch: " + str(exc))
 
     for required in REQUIRED_FILES:
         if required not in tracked_set or not (ROOT / required).is_file():
@@ -166,6 +185,9 @@ def main() -> int:
     print("SUBMISSION AUDIT")
     print("================")
     print("Tracked files:", len(tracked))
+    print("Submission branch:",
+          "PASS (main)" if "branch" in locals() and branch == "main" else
+          ("IGNORED (hygiene-only)" if args.hygiene_only else "BLOCKED"))
     print("Required files:", "PASS" if not any("Missing required" in b for b in blockers) else "FAIL")
     print("Sensitive/runtime artefacts:",
           "PASS" if not any("artefact" in b or "environment file" in b for b in blockers) else "FAIL")

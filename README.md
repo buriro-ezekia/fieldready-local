@@ -89,7 +89,8 @@ Use:
 
 - [the under-three-minute recording script](docs/demo-script.md) for the video;
 - [the visual capture plan](docs/submission-assets.md) for screenshots;
-- [the field-by-field Devpost package](docs/devpost-submission.md) for submission text.
+- [the field-by-field Devpost package](docs/devpost-submission.md) for submission text;
+- [the requirements-to-evidence map](docs/submission-requirements-map.md) for final coverage.
 
 Before submitting, run the repository audit:
 

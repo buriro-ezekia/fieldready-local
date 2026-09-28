@@ -8,8 +8,7 @@ an Amazon-certified application. Use synthetic data only.
 
 The maintainer has demonstrated the core workflow on Windows:
 
-**browser -> real MCP evidence -> local AI intent classification -> deterministic grounded
-explanation -> human-controlled review decision**
+**browser -> deterministic scope guard -> real MCP evidence -> local AI review-focus classification -> deterministic grounded explanation -> human-controlled review decision**
 
 The current synthetic prototype includes deterministic CSV checks, immutable source snapshots,
 SQLite review history, explicit confirmation, stale/replay protection, paginated findings,
@@ -26,9 +25,7 @@ Verified Windows evidence includes:
 - a demonstrated grounded `component_total` explanation in **8.46 seconds**;
 - an automated network-disabled full-stack pass with **94 tests**, all external probes unreachable and local-model inference measured at **9.52 seconds**.
 
-The local model does **not** write factual review prose. It classifies the supervisor's
-question as in-scope or out-of-scope; Python renders factual wording from verified evidence.
-The model has no review-write tool.
+The local model does **not** decide whether a question is allowed and does **not** write factual review prose. Python decides scope deterministically. Only in-scope review questions reach the local model, which classifies a non-critical review focus such as reason, verification, evidence or review guidance. Python renders all factual wording from verified evidence. The model has no review-write tool.
 
 See [verification evidence](docs/verification.md), [browser guide](docs/browser.md) and
 [model evaluation](docs/model-evaluation.md).
@@ -93,8 +90,7 @@ not download a model or silently substitute a hosted API.
 
 ## Release hardening
 
-The tested Windows dependency snapshot is committed and the automated network-disabled
-full-stack proof has passed. The offline gate confirmed that external probes were unreachable
+The tested Windows dependency snapshot is committed. Earlier automated offline and clean-install gates passed before the latest router redesign; they must be rerun once the current focus benchmark passes so final evidence matches the final branch head. The offline gate confirmed that external probes were unreachable
 before exercising MCP, web, SQLite, local AI and a human-confirmed review using only local
 services and synthetic temporary state.
 
@@ -106,13 +102,11 @@ $py = ".\\.venv\\Scripts\\python.exe"
 # Fresh temporary environment + installed-package verification
 & $py scripts/check_clean_install.py
 
-# 16 balanced questions x 2 repeats = 32 real local classifications
+# 16 balanced questions x 2 repeats = 32 production-router evaluations
 & $py scripts/evaluate_intent.py --model "qwen2.5:1.5b" --repeats 2
 ```
 
-The first writes `runtime/clean-install-result.json`. The second writes
-`runtime/intent-eval.json` and requires >=90% overall accuracy and >=85% recall
-for each intent class.
+The benchmark writes `runtime/intent-eval.json`. Scope and routing must be perfect because they are deterministic; the advisory local-model focus classifier must reach at least 75% accuracy on the in-scope cases.
 
 See [release-hardening procedure](docs/release-hardening.md) and
 [model evaluation](docs/model-evaluation.md).

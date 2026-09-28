@@ -119,7 +119,7 @@ The browser should show a repository-neutral relative location similar to:
 
 `Review package exported locally under exports/<run-id>/.`
 
-It must **not** show `C:\Users\...` or another personal absolute path.
+It must **not** show a personal absolute Windows user-directory path.
 
 ### Must show
 

@@ -75,6 +75,23 @@ The hackathon demo is a simulated Alexa+ web experience backed by a real Streama
 server. The reviewed run can be exported with an integrity manifest while the raw source CSV
 remains unchanged and excluded from the report package.
 
+## Judge-facing 30-second pitch
+
+> FieldReady Local is a local-first survey-quality review assistant built around a stricter
+> idea than "AI checks a CSV." Deterministic rules own the facts, a real self-hosted MCP
+> server exposes only bounded evidence operations, local AI helps interpret the supervisor's
+> question without becoming the source of truth, and a human must explicitly approve every
+> decision. The result is an auditable review workflow that can operate without a hosted
+> database or paid inference API.
+
+## Why Alexa+ / MCP fits the idea
+
+MCP is not an add-on in FieldReady Local; it is the authority boundary between the simulated
+Alexa+ experience and the validation domain. The browser receives validation and evidence
+through exactly three MCP tools, while review writes and exports stay outside the model-facing
+surface. That separation is what makes the assistant useful without giving it unrestricted
+authority.
+
 ## Full project description
 
 Field-data quality problems are most expensive when they are discovered late. A missing

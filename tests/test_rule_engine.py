@@ -4,6 +4,8 @@ import hashlib
 import io
 import json
 import sqlite3
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,6 +17,7 @@ from fieldready.rule_engine import (
 from fieldready.storage import Store
 
 RICH = demo_bytes(FIELD_RULESET)
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class VersionedRuleTests(unittest.TestCase):
@@ -157,6 +160,35 @@ class VersionedStoreTests(unittest.TestCase):
             self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 2)
             columns = {row["name"] for row in db.execute("PRAGMA table_info(batches)")}
         self.assertIn("ruleset_id", columns)
+
+    def test_cli_rich_demo_ruleset_catalog_and_export(self):
+        script = str(ROOT / "scripts" / "fieldready.py")
+        base = [sys.executable, script, "--db", str(self.db)]
+
+        catalog = subprocess.run(
+            [sys.executable, script, "rulesets"],
+            capture_output=True, text=True, timeout=10,
+        )
+        self.assertEqual(catalog.returncode, 0, catalog.stderr)
+        ids = {item["id"] for item in json.loads(catalog.stdout)}
+        self.assertIn(FIELD_RULESET, ids)
+
+        demo = subprocess.run(
+            base + ["demo-field"], capture_output=True, text=True, timeout=10,
+        )
+        self.assertEqual(demo.returncode, 0, demo.stderr)
+        result = json.loads(demo.stdout)
+        self.assertEqual(result["finding_count"], 17)
+
+        output = Path(self.tmp.name) / "cli-export"
+        exported = subprocess.run(
+            base + ["export", result["run_id"], str(output)],
+            capture_output=True, text=True, timeout=10,
+        )
+        self.assertEqual(exported.returncode, 0, exported.stderr)
+        payload = json.loads(exported.stdout)
+        self.assertFalse(payload["source_csv_included"])
+        self.assertTrue((output / "summary.md").is_file())
 
 
 class MigrationTests(unittest.TestCase):

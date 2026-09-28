@@ -33,7 +33,7 @@ primary visual.
 Point briefly to the header trust signals:
 
 - Local-first
-- MCP-backed
+- the live MCP badge showing the negotiated protocol and three-tool count
 - Human-approved
 
 Do not describe this as a live Alexa+ integration. The submission is a simulated Alexa+
@@ -147,14 +147,16 @@ time opening all four files in the main demo.
 
 End on the FieldReady Local interface.
 
-## Optional five-second MCP proof
+## MCP proof
 
-If the judges need more explicit technology evidence, briefly show the terminal line:
+The polished browser now shows the live negotiated MCP protocol and tool count in the header.
+Use that as the primary technology proof so the recording can remain product-focused.
+
+A terminal shot is optional only if you want to show the exact three tool names:
 
     MCP ready: protocol 2026-07-28; tools: get_review_summary, list_findings, validate_batch
 
-Do not spend more than five seconds on the terminal. The browser workflow already consumes
-those tools through the real MCP gateway.
+If used, keep the terminal on screen for no more than five seconds.
 
 ## Recording checklist
 

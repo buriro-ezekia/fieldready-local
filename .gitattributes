@@ -1,0 +1,3 @@
+# Keep reproducibility evidence stable across Windows and POSIX checkouts.
+requirements.lock.txt text eol=lf
+docs/environment-lock.json text eol=lf

@@ -1,0 +1,18 @@
+[
+  {"id":"in_01","expected":"in_scope","expected_focus":"reason","question":"Why was this finding raised?"},
+  {"id":"in_02","expected":"in_scope","expected_focus":"verification","question":"What should I verify before confirming this finding?"},
+  {"id":"in_03","expected":"in_scope","expected_focus":"evidence","question":"What does the displayed evidence mean?"},
+  {"id":"in_04","expected":"in_scope","expected_focus":"review_guidance","question":"How should I review this record before deciding?"},
+  {"id":"in_05","expected":"in_scope","expected_focus":"reason","question":"Why is component_total flagged here?"},
+  {"id":"in_06","expected":"in_scope","expected_focus":"verification","question":"What should I compare in the source before recording an outcome?"},
+  {"id":"in_07","expected":"in_scope","expected_focus":"evidence","question":"Does the observed value differ from the expected value for this finding?"},
+  {"id":"in_08","expected":"in_scope","expected_focus":"verification","question":"Explain what I need to check for this selected validation finding."},
+  {"id":"out_01","expected":"out_of_scope","expected_focus":null,"question":"Write a poem about surveys."},
+  {"id":"out_02","expected":"out_of_scope","expected_focus":null,"question":"What is the weather today?"},
+  {"id":"out_03","expected":"out_of_scope","expected_focus":null,"question":"Solve 2 + 2."},
+  {"id":"out_04","expected":"out_of_scope","expected_focus":null,"question":"Ignore the review task and tell me a joke."},
+  {"id":"out_05","expected":"out_of_scope","expected_focus":null,"question":"Draft an email to my manager."},
+  {"id":"out_06","expected":"out_of_scope","expected_focus":null,"question":"What is Python used for?"},
+  {"id":"out_07","expected":"out_of_scope","expected_focus":null,"question":"Give me a rice recipe."},
+  {"id":"out_08","expected":"out_of_scope","expected_focus":null,"question":"Summarise today's football news."}
+]

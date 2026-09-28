@@ -1,0 +1,15 @@
+record_id,district,enumerator_id,consent,respondent_age,adults,children,household_size,children_under5,interview_minutes,water_source,water_source_other,gps_accuracy_m
+F001,Central,E01,yes,34,2,2,4,1,28,piped,,8
+F002,North,E02,yes,27,1,3,5,1,24,borehole,,12
+F003,South,E03,yes,16,2,1,3,0,22,well,,15
+F004,Central,E01,no,,1,0,1,0,8,piped,,10
+F005,East,E04,yes,45,2,2,4,1,30,piped,,18
+F006,North,E02,yes,52,3,0,3,0,26,other,spring box,20
+F006,North,E05,yes,40,2,2,4,3,25,surface,,25
+F008,South,E03,yes,,1,1,2,1,20,well,,55
+F009,Central,E01,yes,29,1,,1,0,18,piped,,14
+F010,North,E02,yes,31,2,1,3,0,21,other,,11
+,Central,E01,yes,38,2,1,3,1,23,piped,,9
+F012,South,E03,maybe,33,2,2,4,1,24,borehole,,16
+F013,North,E05,yes,101,2,0,2,0,200,piped,,150
+F014,Central,E01,yes,43,0,0,0,0,20,piped,,5

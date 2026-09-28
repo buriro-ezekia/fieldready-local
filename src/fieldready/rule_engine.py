@@ -344,6 +344,7 @@ def validate_for_ruleset(data: bytes, ruleset_id: str) -> dict[str, Any]:
                         observed="", expected=rule["expected"], message=rule["message"],
                         verification=rule.get("verification"))
 
+    findings.sort(key=lambda item: item.row_number)
     finding_dicts = [asdict(item) for item in findings]
     severity_counts = Counter(item.severity for item in findings)
     rule_counts = Counter(item.rule_id for item in findings)

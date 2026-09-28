@@ -222,7 +222,11 @@ class WebTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(status, 200)
         self.assertFalse(exported["source_csv_included"])
         output = Path(exported["output_dir"])
-        self.assertEqual(output, self.db.parent / "exports" / run_id)
+        expected_output = self.db.parent / "exports" / run_id
+        self.assertTrue(
+            output.samefile(expected_output),
+            f"Export escaped application-controlled directory: {output} != {expected_output}",
+        )
         self.assertEqual(
             {path.name for path in output.iterdir()},
             {"summary.md", "findings.csv", "review_history.csv", "manifest.json"},

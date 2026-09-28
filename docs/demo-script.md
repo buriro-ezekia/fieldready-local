@@ -1,189 +1,299 @@
-# FieldReady Local — hackathon demo script
+# FieldReady Local — final YouTube demo script
 
-Target length: **2 minutes 35 seconds**. Keep the full recording under three minutes.
+**Target duration:** 2:30–2:40  
+**Hard limit:** under 3:00  
+**Format:** browser-first screen recording with English narration  
+**Demo data:** built-in synthetic Field-survey demo only
+
+The official hackathon rules require a public YouTube/Vimeo demo under three minutes. For
+the Alexa+ simulated-experience path, the video should clearly show the experience working.
+The browser itself now shows the negotiated MCP protocol and tool count, so a terminal shot
+is optional.
+
+---
 
 ## Before recording
 
-Use the verified M1 branch plus presentation-polish branch. Start the application with the
-installed local model:
+1. Pull the latest `feat/demo-polish` branch.
+2. Run:
 
-    .\.venv\Scripts\python.exe scripts/run_web.py --model "qwen2.5:1.5b"
+       .\.venv\Scripts\python.exe scripts/run_web.py --model "qwen2.5:1.5b"
 
-Open the private localhost session link, then make sure the token has disappeared from the
-address bar before recording.
+3. Open the private local session link.
+4. Wait until the `#token=...` fragment disappears from the browser address bar.
+5. Use the **Field-survey demo** only.
+6. Set browser zoom to about 90–100%.
+7. Hide bookmarks/favourites bars and notifications.
+8. Do not show real data, terminal secrets, personal paths or credentials.
+9. Record at 1080p / 16:9 if practical.
+10. Do not use copyrighted music. A clean voice-over with no music is sufficient.
 
-Use only the built-in synthetic **Field-survey demo**. Do not display a real survey file,
-database, token, terminal secret or respondent record.
+---
 
-Keep the terminal available for one short MCP proof if needed, but make the browser the
-primary visual.
+# Exact recording sequence and narration
 
-## Recording sequence
+## 0:00–0:16 — Problem + product
 
-### 0:00–0:18 — Problem and product
+### On screen
+Start on the polished FieldReady Local browser home view.
 
-**On screen:** FieldReady Local home view.
-
-**Narration:**
-
-> Field teams often discover survey-quality problems only after data has moved downstream.
-> FieldReady Local checks a survey batch on the same computer, shows supervisors the exact
-> evidence, and keeps every decision human-controlled.
-
-Point briefly to the header trust signals:
+Make sure the header shows:
 
 - Local-first
-- the live MCP badge showing the negotiated protocol and three-tool count
+- live MCP protocol/tool-count badge
 - Human-approved
 
-Do not describe this as a live Alexa+ integration. The submission is a simulated Alexa+
-experience backed by the real local MCP server.
+### Say
 
-### 0:18–0:38 — Start the richer field-survey demo
+> Field teams often discover survey-quality problems only after the data has already moved
+> downstream. FieldReady Local brings that review step closer to collection: it validates
+> locally, shows supervisors the evidence, and keeps every decision human-controlled.
 
+### Purpose
+Immediately establishes the customer problem and product value.
+
+---
+
+## 0:16–0:30 — Prove the Alexa+/MCP technology
+
+### On screen
+Point briefly to the live badge, for example:
+
+> MCP 2026-07-28 · 3 tools
+
+### Say
+
+> This is a simulated Alexa+ experience backed by a real self-hosted MCP server over
+> Streamable HTTP. The browser is showing the negotiated MCP protocol and the bounded tool
+> surface live.
+
+### Purpose
+Proves the required technology inside the product instead of relying on a terminal.
+
+---
+
+## 0:30–0:52 — Start the richer field-survey workflow
+
+### Action
 Click **Field-survey demo**.
 
-**On screen:** 14 records, 17 findings, 13 affected records.
+Wait for the dashboard to populate.
 
-**Narration:**
+### On screen
+Show clearly:
 
-> This fictional field batch is bound to a versioned ruleset. Fourteen records produce
-> seventeen findings across completeness, validity, consistency, duration, uniqueness and
-> GPS-quality checks.
-
-Point to:
-
+- 14 records
+- 17 findings
+- 13 affected records
 - critical 3
 - high 9
 - medium 5
-- 80 evaluable / 5 not evaluable
+- 80 evaluable
+- 5 not evaluable
 
-**Key message:** a failed prerequisite becomes “not evaluable”; it is not silently counted
-as a pass.
+### Say
 
-### 0:38–1:05 — Priority evidence
+> This fictional field-survey batch is bound to a versioned ruleset. Fourteen records
+> produce seventeen evidence-backed findings across completeness, validity, consistency,
+> uniqueness, interview duration and GPS quality. If a rule cannot be evaluated because a
+> prerequisite is missing or invalid, FieldReady records that explicitly instead of silently
+> treating it as a pass.
 
+### Purpose
+Shows product depth and the richer M1 demo immediately.
+
+---
+
+## 0:52–1:17 — Open the highest-priority evidence
+
+### Action
 Click **Review next priority**.
 
-**On screen:** highest-priority unresolved finding and Evidence & decision panel.
+### On screen
+Keep the selected row and the Evidence & decision panel visible.
 
-**Narration:**
+Pause briefly on:
 
-> The queue prioritises unresolved evidence for review. The rule, severity, field,
-> observed value, expected value, why it was flagged and what the supervisor should verify
-> all come from deterministic Python rules—not from the language model.
+- Rule
+- Category
+- Severity
+- Observed
+- Expected
+- Why flagged
+- What to verify
 
-Pause long enough for the evidence to be readable.
+### Say
 
-### 1:05–1:32 — Local AI, bounded role
+> The supervisor can jump directly to the highest-priority unresolved finding. The rule,
+> severity, observed value, expected value, why it was flagged and what should be verified
+> all come from deterministic Python rules — not from the language model.
 
-In the question box use:
+### Purpose
+Makes the evidence/authority boundary obvious.
+
+---
+
+## 1:17–1:47 — Show the bounded local AI
+
+### Action
+In the assistant, ask:
 
 > Why is this record flagged, and what should I verify?
 
 Click **Explain with local model**.
 
-**Narration while it runs:**
+### While it runs, say
 
-> The optional local model never receives a review-write tool and does not author the
-> factual finding. Python decides whether the question is in scope; the local model only
-> classifies the review focus; Python renders the explanation from verified evidence.
+> The optional local model is deliberately bounded. Python decides whether the question is
+> in scope. The model only classifies the review focus, and Python renders the factual
+> explanation from verified evidence. The model cannot edit records or save a decision.
 
-When the answer appears, point to:
+### When the answer appears
+Point briefly to:
 
+- grounded explanation
 - model name
-- review focus
+- Focus
+- elapsed time
 - evidence reference
-- notice that no decision was saved
+- notice that no review decision was saved
 
-Do not claim a particular latency before seeing the measured value on screen.
+### Then say
 
-### 1:32–1:58 — Human approval and immutable source
+> So AI helps the supervisor understand the review, but it never becomes the source of truth.
 
-Choose **Confirmed**, enter a short reason such as:
+### Purpose
+This is the strongest differentiating moment in the video.
 
-> Checked the synthetic source evidence.
+---
 
-Tick:
+## 1:47–2:10 — Show explicit human control
 
-> I approve this exact review decision.
+### Action
+In the decision panel:
 
-Click **Save confirmed decision**.
+- select **Confirmed**
+- type: `Checked the synthetic source evidence.`
+- tick **I approve this exact review decision**
+- click **Save confirmed decision**
 
-**Narration:**
+### On screen
+Show unresolved findings decrease by one.
+
+### Say
 
 > A model cannot make this change. The supervisor must state a reason and explicitly approve
 > the exact decision. The original CSV is never edited; review state is stored separately
 > with revision and replay protection.
 
-Show unresolved findings decrease by one.
+### Purpose
+Demonstrates trust, auditability and product design.
 
-### 1:58–2:20 — Local supervisor export
+---
 
+## 2:10–2:27 — Export the audit-ready package
+
+### Action
 Click **Export review package**.
 
-**Narration:**
+### On screen
+Show the screenshot-safe success message:
 
-> The supervisor can export an audit-ready local package containing a Markdown summary,
-> findings CSV, review-history CSV and integrity manifest.
+> Review package exported locally under exports/<run-id>/. Raw source CSV was not included.
 
-Point to the screenshot-safe success message, which shows only the relative local `exports/<run-id>/` location.
+### Say
 
-> The raw source CSV is deliberately excluded.
+> The reviewed run exports a Markdown summary, findings CSV, review-history CSV and integrity
+> manifest. The raw source CSV is deliberately excluded.
 
-If useful, briefly show the export folder after recording the main browser flow. Do not spend
-time opening all four files in the main demo.
+### Purpose
+Shows the supervisor's tangible end product.
 
-### 2:20–2:35 — Close with architecture and impact
+---
 
-**On screen:** browser summary.
+## 2:27–2:38 — Close with the core idea
 
-**Narration:**
+### On screen
+Return attention to the dashboard / supervisor snapshot.
 
-> FieldReady Local combines deterministic survey-quality rules, a bounded MCP interface,
-> optional local AI and explicit human review. It works without a hosted database or paid
-> inference API, and is designed for teams that need evidence and accountability even when
-> connectivity is limited.
+### Say
 
-End on the FieldReady Local interface.
+> FieldReady Local combines deterministic survey-quality rules, bounded MCP, optional local
+> AI and explicit human review in one local-first workflow. The key idea is simple: evidence
+> stays authoritative, AI stays bounded, and the human stays in control.
 
-## MCP proof
+Stop recording.
 
-The polished browser now shows the live negotiated MCP protocol and tool count in the header.
-Use that as the primary technology proof so the recording can remain product-focused.
+---
 
-A terminal shot is optional only if you want to show the exact three tool names:
+# Total narration
+
+Target spoken duration: approximately **2:20–2:30**, leaving several seconds for UI
+response time and natural pauses.
+
+If local inference takes longer than expected, continue speaking the explanation of the AI
+boundary while it runs. Do not wait silently for more than a few seconds.
+
+---
+
+# What NOT to show
+
+Do not spend video time on:
+
+- running all unit tests;
+- opening source-code files;
+- explaining SQLite tables;
+- scrolling GitHub commits;
+- showing the full dependency lock;
+- discussing historical model failures in detail;
+- opening all four export files;
+- showing a private localhost token;
+- showing a personal Windows path;
+- showing real survey/respondent data;
+- claiming a live Alexa+ connection or Amazon certification.
+
+Those details belong in the repository and written submission.
+
+---
+
+# Optional terminal proof
+
+A terminal shot is no longer necessary because the browser shows live MCP health.
+
+If you still want one, show it for **no more than five seconds** and only show:
 
     MCP ready: protocol 2026-07-28; tools: get_review_summary, list_findings, validate_batch
 
-If used, keep the terminal on screen for no more than five seconds.
+Never show environment variables or private tokens.
 
-## Recording checklist
+---
 
-Before submitting the video, verify all of the following:
+# Final pre-recording checklist
 
-- duration is below three minutes;
-- no private localhost token is visible;
-- no real survey/respondent data appears;
-- the Field-survey demo is used, not only the legacy household demo;
-- 14 / 17 / 13 headline counts are visible;
-- severity and rule-evaluation summary are visible;
-- one evidence-backed finding is opened;
-- local AI is shown only in its bounded review-focus role;
-- one explicit human review decision is saved;
-- unresolved count decreases;
-- export success is shown;
-- raw source exclusion is mentioned;
-- no live Alexa+ certification or connection is claimed;
-- no cloud model or paid hosting claim is implied.
+- [ ] Browser is on `feat/demo-polish`.
+- [ ] Application launched with `qwen2.5:1.5b`.
+- [ ] Session token is no longer visible in the address bar.
+- [ ] Live MCP badge is visible.
+- [ ] Field-survey demo produces 14 / 17 / 13.
+- [ ] Severity shows critical 3 / high 9 / medium 5.
+- [ ] Rule evaluation shows 80 evaluable / 5 not evaluable.
+- [ ] Review next priority works.
+- [ ] Local AI explanation works.
+- [ ] Explicit human decision works.
+- [ ] Export success is screenshot-safe.
+- [ ] No personal path appears.
+- [ ] No real data appears.
+- [ ] Recording is 1080p/16:9 if practical.
+- [ ] English narration is clear.
+- [ ] Final video is under 3:00.
+- [ ] No copyrighted music/footage is used.
 
-## Screenshot set for the submission page
+---
 
-Capture three clean screenshots in addition to the video:
+# The story judges should remember
 
-1. **Supervisor overview** — 14 records / 17 findings / 13 affected records plus severity.
-2. **Evidence & human decision** — one critical/high finding with verification guidance.
-3. **Export success / local assistant** — show either the grounded local explanation or the
-   successful four-file report export.
+**Problem -> live MCP proof -> rich survey findings -> deterministic evidence -> bounded local AI -> explicit human decision -> audit-ready local export.**
 
-Do not include the private session token in any screenshot.
+And the one-line idea:
+
+> **Evidence stays authoritative, AI stays bounded, and the human stays in control.**

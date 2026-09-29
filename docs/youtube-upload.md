@@ -49,7 +49,7 @@ Primary track:
 Alexa+
 
 Mini challenge:
-None
+Open Source
 
 #AmazonDeveloperHackathon #AlexaPlus #MCP #LocalAI #SurveyData #DataQuality
 

@@ -170,8 +170,19 @@ def main() -> int:
             blockers.append("Devpost package is missing the public repository URL.")
         if "Alexa+" not in submission or "MCP" not in submission:
             blockers.append("Devpost package is missing the Alexa+/MCP track description.")
-        if "## Mini challenge\n\n**None.**" not in submission:
-            blockers.append("Devpost package no longer confirms mini challenge: none.")
+
+        open_source_requirements = {
+            "Open Source mini challenge selection": "## Mini challenge\n\n**Open Source.**",
+            "Open Source contribution URL": "https://github.com/buriro-ezekia/fieldready-local/pull/5",
+            "Open Source project repository URL": "https://github.com/buriro-ezekia/fieldready-local",
+            "Open Source GitHub username": "**GitHub username:** `buriro-ezekia`",
+            "Open Source contribution description": "### Open Source contribution description",
+            "AWS Builder opt-out": "### AWS Builder Mini Challenge\n\n**No.**",
+        }
+        for label, required_text in open_source_requirements.items():
+            if required_text not in submission:
+                blockers.append("Devpost package is missing: " + label + ".")
+
         if "FieldReady Local was created during the hackathon submission window." not in submission:
             blockers.append("Devpost package is missing the confirmed pre-existing-work disclosure.")
 
@@ -194,9 +205,13 @@ def main() -> int:
     print("Credential/path scan:",
           "PASS" if not any("credential" in b or "session token" in b or "Windows user path" in b
                             for b in blockers) else "FAIL")
+    devpost_blocked = any(
+        blocker.startswith("Devpost package") or "confirmations remain" in blocker
+        for blocker in blockers
+    )
     print("Devpost confirmations:",
           "IGNORED (hygiene-only)" if args.hygiene_only else
-          ("PASS" if not any("confirmations remain" in b for b in blockers) else "BLOCKED"))
+          ("PASS" if not devpost_blocked else "BLOCKED"))
 
     if warnings:
         print("\nWARNINGS")

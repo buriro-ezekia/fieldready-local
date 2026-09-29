@@ -86,7 +86,7 @@ material because judges are not required to watch beyond the limit.
   4. Confirm one human decision;
   5. Export review package.
 
-Final URL remains a human confirmation in `docs/devpost-submission.md`.
+Public demo URL: https://youtu.be/DfNdp4d5lhs
 
 ## Product feedback
 
@@ -116,10 +116,19 @@ It describes:
 
 ### Mini challenge
 
-**None.**
+**Open Source**
 
-The maintainer confirmed that FieldReady Local will enter the Alexa+ primary track only.
-The submission does not claim Open Source or AWS Builder mini challenges.
+FieldReady Local enters the Open Source Mini Challenge alongside the Alexa+ primary track.
+
+Required Open Source evidence:
+
+- contribution URL: https://github.com/buriro-ezekia/fieldready-local/pull/5
+- project repository URL: https://github.com/buriro-ezekia/fieldready-local
+- GitHub username: `buriro-ezekia`
+- contribution description: `docs/devpost-submission.md#open-source-contribution-description`
+
+AWS Builder Mini Challenge: **No**. The demonstrated solution does not use a qualifying AWS
+runtime integration.
 
 ## Pre-existing work disclosure
 

@@ -175,7 +175,7 @@ def main() -> int:
             "Open Source mini challenge selection": "## Mini challenge\n\n**Open Source.**",
             "Open Source contribution URL": "https://github.com/buriro-ezekia/fieldready-local/pull/5",
             "Open Source project repository URL": "https://github.com/buriro-ezekia/fieldready-local",
-            "Open Source GitHub username": "**GitHub username:** \`buriro-ezekia\`",
+            "Open Source GitHub username": "**GitHub username:** `buriro-ezekia`",
             "Open Source contribution description": "### Open Source contribution description",
             "AWS Builder opt-out": "### AWS Builder Mini Challenge\n\n**No.**",
         }
@@ -205,9 +205,13 @@ def main() -> int:
     print("Credential/path scan:",
           "PASS" if not any("credential" in b or "session token" in b or "Windows user path" in b
                             for b in blockers) else "FAIL")
+    devpost_blocked = any(
+        blocker.startswith("Devpost package") or "confirmations remain" in blocker
+        for blocker in blockers
+    )
     print("Devpost confirmations:",
           "IGNORED (hygiene-only)" if args.hygiene_only else
-          ("PASS" if not any("confirmations remain" in b for b in blockers) else "BLOCKED"))
+          ("PASS" if not devpost_blocked else "BLOCKED"))
 
     if warnings:
         print("\nWARNINGS")

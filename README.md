@@ -83,6 +83,8 @@ fixture expectations and export privacy boundary.
 
 **Public demo video:** https://youtu.be/DfNdp4d5lhs
 
+**Hackathon entries:** Alexa+ primary track + Open Source Mini Challenge
+
 For a concise presentation, start the richer field-survey workflow in the browser and follow
 the built-in **2-minute demo path**:
 
@@ -109,10 +111,9 @@ Before submitting, run the repository audit:
 .\.venv\Scripts\python.exe scripts/check_submission.py --hygiene-only
 ```
 
-The mini-challenge choice and pre-existing-work disclosure are now confirmed. The
-hygiene-only pass checks tracked repository safety while allowing the **public demo video
-URL** to remain temporarily unresolved. After the video is uploaded and its URL is inserted,
-the final submission audit without `--hygiene-only` must pass.
+The track choices, Open Source contribution details, pre-existing-work disclosure and public
+demo URL are confirmed. The final submission audit without `--hygiene-only` must pass from
+`main` before submission.
 
 ## Run the core without package installation
 
@@ -200,9 +201,8 @@ $py = ".\.venv\Scripts\python.exe"
 ```
 
 See [release hardening](docs/release-hardening.md) and
-[M1 verification](docs/m1-verification.md) for the evidence boundaries. The remaining
-submission blocker is operational, not architectural: record/upload the public <3 minute
-demo and insert its URL into `docs/devpost-submission.md`.
+[M1 verification](docs/m1-verification.md) for the evidence boundaries. The public demo and all Devpost confirmation fields are resolved. Run the final submission
+audit from `main` immediately before submitting.
 
 ## Cost, privacy and licence
 

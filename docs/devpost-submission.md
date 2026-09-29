@@ -7,7 +7,7 @@ All submission confirmation fields are now resolved.
 
 The maintainer has confirmed:
 - primary track: Alexa+;
-- mini challenge: none;
+- mini challenge: Open Source;
 - pre-existing-work disclosure: the project was created during the hackathon window, with only basic repository scaffolding/documentation preceding the working implementation;
 - public demo video: https://youtu.be/DfNdp4d5lhs.
 
@@ -30,14 +30,49 @@ FieldReady Local does not claim a live Alexa+ connection or Amazon certification
 
 ## Mini challenge
 
-**None.**
+**Open Source.**
 
-FieldReady Local is being submitted to the **Alexa+ primary track only**. This keeps the
-submission focused on the real self-hosted MCP integration and simulated Alexa+ experience.
+FieldReady Local is being submitted to the **Open Source Mini Challenge** alongside the
+Alexa+ primary track.
 
-The project does not claim the AWS Builder mini challenge because the demonstrated stack
-does not depend on AWS runtime services. It also does not enter the Open Source mini
-challenge in this submission.
+The project qualifies as a new Apache-2.0 open-source project created during the hackathon
+window. The final submission-ready release was merged to the public `main` branch through
+PR #5.
+
+Open Source Mini Challenge fields:
+
+- **Contribution URL:** https://github.com/buriro-ezekia/fieldready-local/pull/5
+- **Project repository URL:** https://github.com/buriro-ezekia/fieldready-local
+- **GitHub username:** `buriro-ezekia`
+
+### Open Source contribution description
+
+I created FieldReady Local as a new Apache-2.0 open-source project during the hackathon
+window.
+
+FieldReady Local is a local-first survey-quality review assistant built around a real
+self-hosted MCP server over Streamable HTTP. The open-source implementation includes
+versioned deterministic survey-quality rules, an authenticated browser review workspace, a
+deliberately bounded three-tool MCP interface, optional local AI for non-authoritative
+review-focus classification, SQLite review persistence, explicit human confirmation for
+decisions, audit-ready local export, and an extensive verification suite.
+
+PR #5 merged the complete submission-ready release into the public `main` branch, including
+the application source, synthetic demonstration data, versioned rulesets, tests, setup
+instructions, verification evidence, submission documentation, and Apache-2.0 licence.
+
+The project matters because it demonstrates an inspectable pattern for using AI without
+making the model the source of truth: deterministic rules own factual evidence, MCP exposes
+only bounded operations, AI assists with interpretation, and the human reviewer retains
+authority over final decisions.
+
+### AWS Builder Mini Challenge
+
+**No.**
+
+FieldReady Local is not being submitted for the AWS Builder Mini Challenge. The demonstrated
+solution does not use AWS services such as Amazon Bedrock, AgentCore, Strands SDK, Kiro Crew,
+SageMaker, or another qualifying AWS runtime integration.
 
 ## Public repository
 
@@ -478,7 +513,7 @@ integrity manifest. The raw source CSV is deliberately excluded.**
 
 - [ ] Confirm participant eligibility under the hackathon rules.
 - [x] Public YouTube demo URL added: https://youtu.be/DfNdp4d5lhs
-- [x] Mini challenge confirmed: none.
+- [x] Mini challenge confirmed: Open Source.
 - [x] Pre-existing-work disclosure confirmed.
 - [ ] Video is public, English and under three minutes.
 - [ ] Video shows the simulated Alexa+ experience and real MCP-backed workflow in action.
@@ -487,6 +522,6 @@ integrity manifest. The raw source CSV is deliberately excluded.**
 - [ ] Screenshot/video contains no personal Windows filesystem path.
 - [ ] No real survey/respondent data appears.
 - [ ] Product feedback is pasted into the required feedback field.
-- [ ] Track fields are selected consistently with this document: Alexa+ primary track, no mini challenge.
+- [x] Track fields are selected consistently with this document: Alexa+ primary track + Open Source Mini Challenge; AWS Builder = No.
 - [x] Pre-existing-work disclosure is confirmed accurate by the maintainer.
 - [ ] Consider submitting the friction logs for the optional judging bonus.

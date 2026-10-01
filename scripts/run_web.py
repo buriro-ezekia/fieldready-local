@@ -85,7 +85,7 @@ def main() -> int:
     import uvicorn
 
     ports = [args.web_port, args.mcp_port]
-    if args.ai_service_port:
+    if args.ai_service_port is not None:
         ports.append(args.ai_service_port)
     elif args.model:
         ports.append(args.ollama_port)
@@ -96,7 +96,7 @@ def main() -> int:
             probe.bind(("127.0.0.1", args.web_port))
         token, mcp_token = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
         gateway = MCPGateway(args.mcp_port, mcp_token)
-        if args.ai_service_port:
+        if args.ai_service_port is not None:
             explainer = LocalAIServiceExplainer(args.ai_service_port, args.model)
             explainer.probe()
         elif args.model:
@@ -111,7 +111,7 @@ def main() -> int:
             stack.enter_context(service([sys.executable, "-m", "fieldready.mcp_server",
                                          "--db", str(args.db), "--port", str(args.mcp_port)], args.mcp_port, env))
             health = wait_for_mcp(gateway)
-            if args.model and not args.ai_service_port:
+            if args.model and args.ai_service_port is None:
                 ollama = shutil.which("ollama")
                 if not ollama:
                     raise ValueError("Ollama is not installed or not on PATH. Omit --model to use the review UI.")
@@ -120,7 +120,7 @@ def main() -> int:
             print(f"MCP ready: protocol {health['protocol']}; tools: {', '.join(health['tools'])}", flush=True)
             print("Open this LOCAL SESSION LINK in your browser; keep the full link private:", flush=True)
             print(f"http://127.0.0.1:{args.web_port}/#token={token}", flush=True)
-            if args.ai_service_port:
+            if args.ai_service_port is not None:
                 ai_status = f"{explainer.model} via reusable service 127.0.0.1:{args.ai_service_port}"
             else:
                 ai_status = args.model or "disabled (review workflow remains available)"

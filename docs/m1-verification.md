@@ -112,11 +112,12 @@ evidence boundary and routing-source detail.
 The following path is verified on Windows:
 
 **versioned synthetic ruleset -> immutable ruleset-bound batch -> real MCP validation ->
-rich evidence -> browser review -> explicit human decision -> local supervisor export ->
+rich evidence -> browser review -> optional reusable local AI review-focus classification ->
+deterministic grounded explanation -> explicit human decision -> local supervisor export ->
 restart persistence**
 
-M1 does not add export, filesystem, shell, SQL or review-write capabilities to the MCP tool
-surface.
+The AI explanation path remains advisory and does not save a review decision. M1 does not
+add export, filesystem, shell, SQL or review-write capabilities to the MCP tool surface.
 
 ## Evidence boundaries
 
@@ -125,5 +126,6 @@ surface.
 - No GitHub Actions result is required for this evidence.
 - No paid hosted database, deployment service or external inference API is required.
 - The report package excludes the raw source CSV.
-- Browser local-model inference for the richer M1 ruleset remains a separate visual/manual
-  observation if desired for the final demo.
+- Browser local-model inference for the richer M1 ruleset was observed on 1 October 2026
+  through the reusable loopback AI service with `qwen2.5:3b`; this is not evidence of
+  browser rendering while external networking is disabled.

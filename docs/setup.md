@@ -83,18 +83,27 @@ Without local AI:
 & $py scripts/run_web.py
 ```
 
-With the tested local Ollama model:
+With the tested direct local Ollama model:
 
 ```powershell
 & $py scripts/run_web.py --model "qwen2.5:1.5b"
 ```
+
+With the reusable local AI service already running on port 8082:
+
+```powershell
+& $py scripts/run_web.py --ai-service-port 8082 --model "qwen2.5:3b"
+```
+
+See `docs/local-ai-service.md` for the shared-gateway architecture and verification boundary.
 
 The launcher:
 
 1. generates private local credentials;
 2. starts the MCP server on `127.0.0.1`;
 3. verifies the MCP handshake and exact tool surface;
-4. optionally starts a dedicated local Ollama service with `OLLAMA_NO_CLOUD=1`;
+4. either starts a dedicated local Ollama service with `OLLAMA_NO_CLOUD=1`, or verifies the
+   explicitly selected loopback local AI service;
 5. prints a private localhost session link;
 6. launches no cloud fallback.
 

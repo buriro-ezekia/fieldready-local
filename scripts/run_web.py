@@ -64,7 +64,7 @@ def wait_for_mcp(gateway, timeout=10):
 
 def main() -> int:
     from fieldready.mcp_client import MCPGateway
-    from fieldready.local_model import LocalExplainer
+    from fieldready.local_model import LocalAIServiceExplainer, LocalExplainer
     from fieldready.web_app import WebApp
 
     parser = argparse.ArgumentParser(description="FieldReady Local browser prototype")
@@ -73,7 +73,10 @@ def main() -> int:
     parser.add_argument("--web-port", type=int, default=8501)
     parser.add_argument("--mcp-port", type=int, default=8000)
     parser.add_argument("--ollama-port", type=int, default=11435)
-    parser.add_argument("--model", help="Exact installed local Ollama model name; AI is off when omitted")
+    parser.add_argument("--ai-service-port", type=int,
+                        help="Existing reusable local AI service port; uses it instead of starting Ollama")
+    parser.add_argument("--model",
+                        help="Exact installed local model; optional in AI-service mode, otherwise enables direct Ollama")
     args = parser.parse_args()
     missing = [m for m in ("mcp", "httpx2", "uvicorn") if importlib.util.find_spec(m) is None]
     if missing:
@@ -81,7 +84,11 @@ def main() -> int:
         return 2
     import uvicorn
 
-    ports = [args.web_port, args.mcp_port] + ([args.ollama_port] if args.model else [])
+    ports = [args.web_port, args.mcp_port]
+    if args.ai_service_port is not None:
+        ports.append(args.ai_service_port)
+    elif args.model:
+        ports.append(args.ollama_port)
     if len(ports) != len(set(ports)) or any(not 1 <= p <= 65535 for p in ports):
         parser.error("Use distinct local ports between 1 and 65535.")
     try:
@@ -89,7 +96,13 @@ def main() -> int:
             probe.bind(("127.0.0.1", args.web_port))
         token, mcp_token = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
         gateway = MCPGateway(args.mcp_port, mcp_token)
-        explainer = LocalExplainer(args.model, args.ollama_port) if args.model else None
+        if args.ai_service_port is not None:
+            explainer = LocalAIServiceExplainer(args.ai_service_port, args.model)
+            explainer.probe()
+        elif args.model:
+            explainer = LocalExplainer(args.model, args.ollama_port)
+        else:
+            explainer = None
         app = WebApp(args.db, gateway, token, args.web_port, explainer)
         env = os.environ.copy()
         env["PYTHONPATH"] = str(ROOT / "src") + os.pathsep + env.get("PYTHONPATH", "")
@@ -98,7 +111,7 @@ def main() -> int:
             stack.enter_context(service([sys.executable, "-m", "fieldready.mcp_server",
                                          "--db", str(args.db), "--port", str(args.mcp_port)], args.mcp_port, env))
             health = wait_for_mcp(gateway)
-            if args.model:
+            if args.model and args.ai_service_port is None:
                 ollama = shutil.which("ollama")
                 if not ollama:
                     raise ValueError("Ollama is not installed or not on PATH. Omit --model to use the review UI.")
@@ -107,7 +120,11 @@ def main() -> int:
             print(f"MCP ready: protocol {health['protocol']}; tools: {', '.join(health['tools'])}", flush=True)
             print("Open this LOCAL SESSION LINK in your browser; keep the full link private:", flush=True)
             print(f"http://127.0.0.1:{args.web_port}/#token={token}", flush=True)
-            print("AI: " + (args.model or "disabled (review workflow remains available)"), flush=True)
+            if args.ai_service_port is not None:
+                ai_status = f"{explainer.model} via reusable service 127.0.0.1:{args.ai_service_port}"
+            else:
+                ai_status = args.model or "disabled (review workflow remains available)"
+            print("AI: " + ai_status, flush=True)
             print("Press Ctrl+C here to stop the browser server and its owned services.", flush=True)
             uvicorn.run(app, host="127.0.0.1", port=args.web_port, access_log=False, log_level="warning")
         return 0

@@ -168,7 +168,7 @@ class WebApp:
         if path == "/api/explain":
             fields(body, {"run_id", "finding_id", "question"})
             if self.explainer is None:
-                raise ValueError("AI is disabled. Restart the launcher with --model and an installed local model.")
+                raise ValueError("AI is disabled. Restart with --model for direct Ollama or --ai-service-port for the reusable local AI service.")
             if self.model_lock.locked():
                 raise ValueError("An explanation is already running. Review its result before sending another.")
             if not isinstance(body["finding_id"], str) or not re.fullmatch(r"[a-f0-9]{32}:[0-9]{1,5}", body["finding_id"]):

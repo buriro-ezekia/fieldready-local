@@ -160,18 +160,28 @@ Without AI:
 .\.venv\Scripts\python.exe scripts/run_web.py
 ```
 
-With the tested local model:
+With the tested direct local model:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/run_web.py --model "qwen2.5:1.5b"
 ```
 
+Or, if the reusable local AI service is already running on `127.0.0.1:8082`:
+
+```powershell
+.\.venv\Scripts\python.exe scripts/run_web.py --ai-service-port 8082 --model "qwen2.5:3b"
+```
+
+See [reusable local AI service integration](docs/local-ai-service.md).
+
 Open the full local session link printed in the terminal and keep its token private.
 Create or reopen a synthetic review, select a finding and use the evidence panel. Human-approved
 writes use the trusted local control surface; validation and evidence reads use MCP.
 
-The launcher starts a dedicated loopback Ollama service with cloud access disabled. It does
-not download a model or silently substitute a hosted API.
+Direct mode starts a dedicated loopback Ollama service with cloud access disabled. Service
+mode connects only to the explicitly selected loopback gateway and verifies its advertised
+local Ollama backend/models before inference. Neither mode downloads a model or silently
+substitutes a hosted API.
 
 ## Verification and reproducibility
 

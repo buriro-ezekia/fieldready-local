@@ -3,7 +3,9 @@
 > **Historical M0 evidence.** This file preserves the earlier foundation/release-hardening
 > record. For the current richer hackathon submission evidence (115 tests, versioned
 > field-survey rules, real MCP/web/export/restart integration and browser observation), see
-> [M1 verification](m1-verification.md).
+> [M1 verification](m1-verification.md). A later 1 October 2026 shared-service browser
+> observation is recorded in
+> [reusable local AI browser verification](local-ai-service-verification.md).
 
 ## Current Windows evidence supplied by the maintainer
 

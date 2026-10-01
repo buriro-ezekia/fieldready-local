@@ -89,20 +89,35 @@ The screenshot visibly confirms:
 
 This establishes actual browser rendering and manual use of the local export action for M1.
 
-The screenshot does **not** establish an M1 browser local-model explanation. Real local-model
-behaviour was previously verified in M0/final-router hardening, but a separate M1 browser AI
-observation would be required before making a specific M1 browser-inference claim.
+### Reusable local AI browser observation — 1 October 2026
+
+A later maintainer-supplied Windows browser observation closes the earlier M1
+local-model-inference gap. After pull request #7 was merged to `main`, FieldReady reported:
+
+```text
+AI: qwen2.5:3b via reusable service 127.0.0.1:8082
+```
+
+For the richer `household.component_total` finding at record ordinal 2, the browser showed
+observed `household_size = 5`, expected component total `4`, model `qwen2.5:3b`, focus
+`combined`, elapsed time **18.42 seconds**, and an explicit notice that **no review decision
+was saved**. Scope remained deterministic and Python rendered the factual explanation from
+verified evidence.
+
+See [reusable local AI browser verification](local-ai-service-verification.md) for the
+evidence boundary and routing-source detail.
 
 ## What M1 now establishes
 
 The following path is verified on Windows:
 
 **versioned synthetic ruleset -> immutable ruleset-bound batch -> real MCP validation ->
-rich evidence -> browser review -> explicit human decision -> local supervisor export ->
+rich evidence -> browser review -> optional reusable local AI review-focus classification ->
+deterministic grounded explanation -> explicit human decision -> local supervisor export ->
 restart persistence**
 
-M1 does not add export, filesystem, shell, SQL or review-write capabilities to the MCP tool
-surface.
+The AI explanation path remains advisory and does not save a review decision. M1 does not
+add export, filesystem, shell, SQL or review-write capabilities to the MCP tool surface.
 
 ## Evidence boundaries
 
@@ -111,5 +126,6 @@ surface.
 - No GitHub Actions result is required for this evidence.
 - No paid hosted database, deployment service or external inference API is required.
 - The report package excludes the raw source CSV.
-- Browser local-model inference for the richer M1 ruleset remains a separate visual/manual
-  observation if desired for the final demo.
+- Browser local-model inference for the richer M1 ruleset was observed on 1 October 2026
+  through the reusable loopback AI service with `qwen2.5:3b`; this is not evidence of
+  browser rendering while external networking is disabled.

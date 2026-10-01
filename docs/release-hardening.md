@@ -164,3 +164,25 @@ Both the lock writer and clean-install verifier now normalise CRLF/CR to LF befo
 calculating SHA-256. `.gitattributes` also requests LF for the lock and metadata files.
 This changes neither the dependency pins nor the recorded digest; it makes verification
 consistent across Windows and POSIX checkouts.
+
+
+## 8. Reusable local AI service browser evidence
+
+A separate maintainer-supplied Windows observation on **1 October 2026** demonstrated the
+new reusable-service path after pull request #7 was merged:
+
+```text
+FieldReady browser
+  -> deterministic scope
+  -> reusable local AI service 127.0.0.1:8082
+  -> qwen2.5:3b focus classification
+  -> deterministic grounded explanation
+```
+
+For the richer `household.component_total` finding, the browser reported focus
+`combined`, elapsed time **18.42 seconds**, observed **5**, expected **4**, and confirmed
+that no review decision was saved by the AI request.
+
+This is browser/service/model evidence, not a replacement for the explicit offline gate or
+the broader focus benchmark. See
+[reusable local AI browser verification](local-ai-service-verification.md).

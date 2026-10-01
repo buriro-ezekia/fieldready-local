@@ -89,9 +89,23 @@ The screenshot visibly confirms:
 
 This establishes actual browser rendering and manual use of the local export action for M1.
 
-The screenshot does **not** establish an M1 browser local-model explanation. Real local-model
-behaviour was previously verified in M0/final-router hardening, but a separate M1 browser AI
-observation would be required before making a specific M1 browser-inference claim.
+### Reusable local AI browser observation — 1 October 2026
+
+A later maintainer-supplied Windows browser observation closes the earlier M1
+local-model-inference gap. After pull request #7 was merged to `main`, FieldReady reported:
+
+```text
+AI: qwen2.5:3b via reusable service 127.0.0.1:8082
+```
+
+For the richer `household.component_total` finding at record ordinal 2, the browser showed
+observed `household_size = 5`, expected component total `4`, model `qwen2.5:3b`, focus
+`combined`, elapsed time **18.42 seconds**, and an explicit notice that **no review decision
+was saved**. Scope remained deterministic and Python rendered the factual explanation from
+verified evidence.
+
+See [reusable local AI browser verification](local-ai-service-verification.md) for the
+evidence boundary and routing-source detail.
 
 ## What M1 now establishes
 
